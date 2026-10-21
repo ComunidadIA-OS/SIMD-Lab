@@ -1,0 +1,63 @@
+"""Conector de The Guardian Open Platform (endpoint /search)."""
+from __future__ import annotations
+
+import logging
+import os
+from typing import List, Optional
+
+from src.common.schemas import MediaSource, UnifiedMediaDocument
+from src.connectors.base import BaseMediaConnector
+
+logger = logging.getLogger(__name__)
+
+API_URL = "https://content.guardianapis.com/search"
+
+
+class GuardianConnector(BaseMediaConnector):
+    source = MediaSource.GUARDIAN
+    max_concurrency = 2
+
+    def __init__(self, api_key: Optional[str] = None, **kw) -> None:
+        super().__init__(**kw)
+        self.api_key = api_key or os.getenv("GUARDIAN_API_KEY")
+
+    def parse_results(self, data: dict, query: str) -> List[UnifiedMediaDocument]:
+        docs = []
+        for item in data.get("response", {}).get("results", []):
+            fields = item.get("fields", {}) or {}
+            url = item.get("webUrl", "")
+            thumb = fields.get("thumbnail")
+            docs.append(UnifiedMediaDocument(
+                doc_id=self.make_doc_id(self.source, url),
+                source=self.source,
+                company_query=query,
+                url=url,
+                title=fields.get("headline") or item.get("webTitle", ""),
+                published_date=item.get("webPublicationDate"),
+                language="en",
+                license="Guardian Open Platform (uso no comercial, ver términos)",
+                author=fields.get("byline"),
+                raw_text=fields.get("bodyText") or None,
+                image_urls=[thumb] if thumb else [],
+                extra={"section": item.get("sectionId", ""), "guardian_id": item.get("id", "")},
+            ))
+        return docs
+
+    async def fetch_news(self, query: str, section: Optional[str], limit: int) -> List[UnifiedMediaDocument]:
+        if not self.api_key:
+            logger.warning("GUARDIAN_API_KEY no definida: se omite The Guardian.")
+            return []
+        params = {
+            "q": f'"{query}"',
+            "page-size": min(limit, 50),
+            "order-by": "relevance",
+            "show-fields": "headline,byline,bodyText,thumbnail",
+            "api-key": self.api_key,
+        }
+        if section:
+            params["section"] = section
+        data = await self.get_json(API_URL, params)
+        return self.parse_results(data, query)[:limit]
+
+    async def fetch_top_candidates(self, query: str, limit: int) -> List[UnifiedMediaDocument]:
+        return await self.fetch_news(query, None, limit)

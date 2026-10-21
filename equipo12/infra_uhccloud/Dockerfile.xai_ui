@@ -1,0 +1,48 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    STREAMLIT_SERVER_PORT=8501 \
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+
+WORKDIR /app
+
+# Instalar dependencias del sistema operativo (LightGBM / compilación)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgomp1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar requisitos de Python de la Integrante 3
+COPY requirements/requirements.txt /app/requirements/requirements.txt
+COPY requirements/requirements.txt /app/requirements/requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r /app/requirements/requirements.txt
+
+# Copiar el código fuente
+COPY src/common /app/src/common
+COPY src/explainability /app/src/explainability
+COPY src/governance_ai_act /app/src/governance_ai_act
+COPY src/api /app/src/api
+COPY frontend /app/frontend
+COPY tests/mocks /app/tests/mocks
+
+# Requisito obligatorio de OVH AI Deploy: crear el home del usuario 42420
+RUN mkdir /workspace && chown -R 42420:42420 /workspace
+ENV HOME /workspace
+WORKDIR /workspace
+
+# Ejecutar con el usuario específico de OVH AI Deploy
+USER 42420:42420
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "/app/frontend/app.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0", \
+     "--server.enableCORS=false", \
+     "--server.enableXsrfProtection=false"]

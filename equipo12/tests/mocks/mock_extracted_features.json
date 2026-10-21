@@ -1,0 +1,660 @@
+[
+  {
+    "doc_id": "doc_001",
+    "title": "La directora ejecutiva de Iberdrola lidera el plan de transición energética",
+    "url": "https://theguardian.com/business/example1",
+    "source": "The Guardian",
+    "company_query": "Iberdrola",
+    "raw_text_snippet": "La directora ejecutiva y presidenta de la división en Iberdrola explicó la estrategia de innovación y liderazgo femenino en el consejo.",
+    "text_samples": [
+      {
+        "text": "La directora ejecutiva y presidenta de la división en Iberdrola explicó la estrategia de innovación y liderazgo femenino en el consejo.",
+        "metrics": {
+          "sentence_female_ratio": 0.72,
+          "sentence_male_ratio": 0.14,
+          "sentence_neutral_ratio": 0.14,
+          "lexical_root_diversity": 0.82,
+          "feminine_suffix_ratio": 0.88,
+          "female_mention_frequency": 18,
+          "relative_frequency_score": 0.78,
+          "syntactic_agency_ratio": 0.85,
+          "expert_quote_ratio": 0.88,
+          "headline_presence": 1.0
+        }
+      },
+      {
+        "text": "Durante su comparecencia, la consejera delegada de Iberdrola anunció un fondo pionero de I+D impulsado por ingenieras y científicas líderes.",
+        "metrics": {
+          "sentence_female_ratio": 0.77,
+          "sentence_male_ratio": 0.14,
+          "sentence_neutral_ratio": 0.14,
+          "lexical_root_diversity": 0.82,
+          "feminine_suffix_ratio": 0.88,
+          "female_mention_frequency": 19,
+          "relative_frequency_score": 0.78,
+          "syntactic_agency_ratio": 0.85,
+          "expert_quote_ratio": 0.88,
+          "headline_presence": 1.0
+        }
+      }
+    ],
+    "media_image_samples": [
+      {
+        "image_path": "data/ephemeral_samples/guardian_directora_1.jpg",
+        "metrics": {
+          "visual_gender_female_ratio": 0.75,
+          "shot_scale_importance_score": 0.88,
+          "camera_angle_power_score": 0.85,
+          "rule_of_thirds_alignment": 0.9,
+          "shadow_lighting_prominence": 0.86,
+          "cross_image_appearance_count": 9,
+          "cross_image_persistence_ratio": 0.82,
+          "spatial_centrality_score": 0.86,
+          "leadership_visual_context": 0.92
+        }
+      },
+      {
+        "image_path": "data/ephemeral_samples/guardian_directora_2.jpg",
+        "metrics": {
+          "visual_gender_female_ratio": 0.67,
+          "shot_scale_importance_score": 0.88,
+          "camera_angle_power_score": 0.85,
+          "rule_of_thirds_alignment": 0.9,
+          "shadow_lighting_prominence": 0.86,
+          "cross_image_appearance_count": 9,
+          "cross_image_persistence_ratio": 0.82,
+          "spatial_centrality_score": 0.86,
+          "leadership_visual_context": 0.92
+        }
+      }
+    ],
+    "media_audio_samples": [],
+    "media_video_samples": [],
+    "demographic_subgroup": "Mujer_Adulta_VozNativa",
+    "available_modalities": [
+      "Texto",
+      "Imagen"
+    ],
+    "text_metrics": {
+      "sentence_female_ratio": 0.72,
+      "sentence_male_ratio": 0.14,
+      "sentence_neutral_ratio": 0.14,
+      "lexical_root_diversity": 0.82,
+      "feminine_suffix_ratio": 0.88,
+      "female_mention_frequency": 18,
+      "relative_frequency_score": 0.78,
+      "syntactic_agency_ratio": 0.85,
+      "expert_quote_ratio": 0.88,
+      "headline_presence": 1.0
+    },
+    "audio_metrics": null,
+    "image_metrics": {
+      "visual_gender_female_ratio": 0.75,
+      "shot_scale_importance_score": 0.88,
+      "camera_angle_power_score": 0.85,
+      "rule_of_thirds_alignment": 0.9,
+      "shadow_lighting_prominence": 0.86,
+      "cross_image_appearance_count": 9,
+      "cross_image_persistence_ratio": 0.82,
+      "spatial_centrality_score": 0.86,
+      "leadership_visual_context": 0.92
+    },
+    "video_metrics": null,
+    "biometric_purged": true
+  },
+  {
+    "doc_id": "doc_002",
+    "title": "Resumen anual y debate financiero sobre Iberdrola en televisión",
+    "url": "https://youtube.com/watch?v=example2",
+    "source": "YouTube",
+    "company_query": "Iberdrola",
+    "raw_text_snippet": "",
+    "text_samples": [],
+    "media_image_samples": [],
+    "media_audio_samples": [
+      {
+        "audio_path": "data/ephemeral_samples/youtube_debate_bloque1_apertura.wav",
+        "metrics": {
+          "opened_by": "male",
+          "closed_by": "male",
+          "female_opened_score": 0.0,
+          "female_closed_score": 0.0,
+          "middle_segment_female_ratio": 0.2,
+          "female_speaking_time_ratio": 0.18,
+          "female_turn_count": 2,
+          "speaking_turns_ratio": 0.18,
+          "acoustic_gender_confidence": 0.84,
+          "no_interruption_score": 0.35
+        }
+      },
+      {
+        "audio_path": "data/ephemeral_samples/youtube_debate_bloque2_turno_analista.wav",
+        "metrics": {
+          "opened_by": "male",
+          "closed_by": "male",
+          "female_opened_score": 0.0,
+          "female_closed_score": 0.0,
+          "middle_segment_female_ratio": 0.32,
+          "female_speaking_time_ratio": 0.07999999999999999,
+          "female_turn_count": 5,
+          "speaking_turns_ratio": 0.25,
+          "acoustic_gender_confidence": 0.84,
+          "no_interruption_score": 0.3
+        }
+      }
+    ],
+    "media_video_samples": [
+      {
+        "video_path": "data/ephemeral_samples/youtube_debate_hd_camara_principal.mp4",
+        "metrics": {
+          "audio_track": {
+            "opened_by": "male",
+            "closed_by": "male",
+            "female_opened_score": 0.0,
+            "female_closed_score": 0.0,
+            "middle_segment_female_ratio": 0.2,
+            "female_speaking_time_ratio": 0.18,
+            "female_turn_count": 2,
+            "speaking_turns_ratio": 0.18,
+            "acoustic_gender_confidence": 0.84,
+            "no_interruption_score": 0.35
+          },
+          "frame_set_visuals": {
+            "visual_gender_female_ratio": 0.22,
+            "shot_scale_importance_score": 0.24,
+            "camera_angle_power_score": 0.25,
+            "rule_of_thirds_alignment": 0.28,
+            "shadow_lighting_prominence": 0.3,
+            "cross_image_appearance_count": 1,
+            "cross_image_persistence_ratio": 0.2,
+            "spatial_centrality_score": 0.3,
+            "leadership_visual_context": 0.25
+          },
+          "optical_flow_motion_score": 0.3,
+          "kinetic_dominance_ratio": 0.28,
+          "silhouette_change_histogram_score": 0.32,
+          "female_screen_time_ratio": 0.3,
+          "active_speaker_sync_score": 0.25
+        }
+      },
+      {
+        "video_path": "data/ephemeral_samples/youtube_debate_hd_plano_analista.mp4",
+        "metrics": {
+          "audio_track": {
+            "opened_by": "male",
+            "closed_by": "male",
+            "female_opened_score": 0.0,
+            "female_closed_score": 0.0,
+            "middle_segment_female_ratio": 0.2,
+            "female_speaking_time_ratio": 0.18,
+            "female_turn_count": 2,
+            "speaking_turns_ratio": 0.18,
+            "acoustic_gender_confidence": 0.84,
+            "no_interruption_score": 0.35
+          },
+          "frame_set_visuals": {
+            "visual_gender_female_ratio": 0.22,
+            "shot_scale_importance_score": 0.24,
+            "camera_angle_power_score": 0.25,
+            "rule_of_thirds_alignment": 0.28,
+            "shadow_lighting_prominence": 0.3,
+            "cross_image_appearance_count": 1,
+            "cross_image_persistence_ratio": 0.2,
+            "spatial_centrality_score": 0.3,
+            "leadership_visual_context": 0.25
+          },
+          "optical_flow_motion_score": 0.44999999999999996,
+          "kinetic_dominance_ratio": 0.2,
+          "silhouette_change_histogram_score": 0.32,
+          "female_screen_time_ratio": 0.4,
+          "active_speaker_sync_score": 0.25
+        }
+      }
+    ],
+    "demographic_subgroup": "Mujer_Joven_MinoríaÉtnica",
+    "available_modalities": [
+      "Audio",
+      "Vídeo"
+    ],
+    "text_metrics": null,
+    "audio_metrics": {
+      "opened_by": "male",
+      "closed_by": "male",
+      "female_opened_score": 0.0,
+      "female_closed_score": 0.0,
+      "middle_segment_female_ratio": 0.2,
+      "female_speaking_time_ratio": 0.18,
+      "female_turn_count": 2,
+      "speaking_turns_ratio": 0.18,
+      "acoustic_gender_confidence": 0.84,
+      "no_interruption_score": 0.35
+    },
+    "image_metrics": null,
+    "video_metrics": {
+      "audio_track": {
+        "opened_by": "male",
+        "closed_by": "male",
+        "female_opened_score": 0.0,
+        "female_closed_score": 0.0,
+        "middle_segment_female_ratio": 0.2,
+        "female_speaking_time_ratio": 0.18,
+        "female_turn_count": 2,
+        "speaking_turns_ratio": 0.18,
+        "acoustic_gender_confidence": 0.84,
+        "no_interruption_score": 0.35
+      },
+      "frame_set_visuals": {
+        "visual_gender_female_ratio": 0.22,
+        "shot_scale_importance_score": 0.24,
+        "camera_angle_power_score": 0.25,
+        "rule_of_thirds_alignment": 0.28,
+        "shadow_lighting_prominence": 0.3,
+        "cross_image_appearance_count": 1,
+        "cross_image_persistence_ratio": 0.2,
+        "spatial_centrality_score": 0.3,
+        "leadership_visual_context": 0.25
+      },
+      "optical_flow_motion_score": 0.3,
+      "kinetic_dominance_ratio": 0.28,
+      "silhouette_change_histogram_score": 0.32,
+      "female_screen_time_ratio": 0.3,
+      "active_speaker_sync_score": 0.25
+    },
+    "biometric_purged": true
+  },
+  {
+    "doc_id": "doc_003",
+    "title": "Historia corporativa y consejo de administración de Iberdrola",
+    "url": "https://es.wikipedia.org/wiki/Example3",
+    "source": "Wikimedia",
+    "company_query": "Iberdrola",
+    "raw_text_snippet": "La consejera independiente y científica fundadora anunció nuevos acuerdos tecnológicos estratégicos dentro de la junta directiva de Iberdrola.",
+    "text_samples": [
+      {
+        "text": "La consejera independiente y científica fundadora anunció nuevos acuerdos tecnológicos estratégicos dentro de la junta directiva de Iberdrola.",
+        "metrics": {
+          "sentence_female_ratio": 0.5,
+          "sentence_male_ratio": 0.25,
+          "sentence_neutral_ratio": 0.25,
+          "lexical_root_diversity": 0.62,
+          "feminine_suffix_ratio": 0.64,
+          "female_mention_frequency": 9,
+          "relative_frequency_score": 0.55,
+          "syntactic_agency_ratio": 0.65,
+          "expert_quote_ratio": 0.6,
+          "headline_presence": 0.5
+        }
+      },
+      {
+        "text": "En la sección de gobierno corporativo se destaca a la directiva y jurista especializada como portavoz clave en la modernización operativa de Iberdrola.",
+        "metrics": {
+          "sentence_female_ratio": 0.55,
+          "sentence_male_ratio": 0.25,
+          "sentence_neutral_ratio": 0.25,
+          "lexical_root_diversity": 0.62,
+          "feminine_suffix_ratio": 0.64,
+          "female_mention_frequency": 10,
+          "relative_frequency_score": 0.55,
+          "syntactic_agency_ratio": 0.65,
+          "expert_quote_ratio": 0.6,
+          "headline_presence": 0.5
+        }
+      }
+    ],
+    "media_image_samples": [
+      {
+        "image_path": "data/ephemeral_samples/wikimedia_consejo.jpg",
+        "metrics": {
+          "visual_gender_female_ratio": 0.55,
+          "shot_scale_importance_score": 0.65,
+          "camera_angle_power_score": 0.62,
+          "rule_of_thirds_alignment": 0.68,
+          "shadow_lighting_prominence": 0.7,
+          "cross_image_appearance_count": 5,
+          "cross_image_persistence_ratio": 0.58,
+          "spatial_centrality_score": 0.65,
+          "leadership_visual_context": 0.7
+        }
+      },
+      {
+        "image_path": "data/ephemeral_samples/wikimedia_ingeniera_jefa.jpg",
+        "metrics": {
+          "visual_gender_female_ratio": 0.47000000000000003,
+          "shot_scale_importance_score": 0.65,
+          "camera_angle_power_score": 0.62,
+          "rule_of_thirds_alignment": 0.68,
+          "shadow_lighting_prominence": 0.7,
+          "cross_image_appearance_count": 5,
+          "cross_image_persistence_ratio": 0.58,
+          "spatial_centrality_score": 0.65,
+          "leadership_visual_context": 0.7
+        }
+      }
+    ],
+    "media_audio_samples": [],
+    "media_video_samples": [],
+    "demographic_subgroup": "Mujer_Adulta_VozNativa",
+    "available_modalities": [
+      "Texto",
+      "Imagen"
+    ],
+    "text_metrics": {
+      "sentence_female_ratio": 0.5,
+      "sentence_male_ratio": 0.25,
+      "sentence_neutral_ratio": 0.25,
+      "lexical_root_diversity": 0.62,
+      "feminine_suffix_ratio": 0.64,
+      "female_mention_frequency": 9,
+      "relative_frequency_score": 0.55,
+      "syntactic_agency_ratio": 0.65,
+      "expert_quote_ratio": 0.6,
+      "headline_presence": 0.5
+    },
+    "audio_metrics": null,
+    "image_metrics": {
+      "visual_gender_female_ratio": 0.55,
+      "shot_scale_importance_score": 0.65,
+      "camera_angle_power_score": 0.62,
+      "rule_of_thirds_alignment": 0.68,
+      "shadow_lighting_prominence": 0.7,
+      "cross_image_appearance_count": 5,
+      "cross_image_persistence_ratio": 0.58,
+      "spatial_centrality_score": 0.65,
+      "leadership_visual_context": 0.7
+    },
+    "video_metrics": null,
+    "biometric_purged": true
+  },
+  {
+    "doc_id": "doc_004",
+    "title": "Cobertura global de prensa sobre sostenibilidad en Iberdrola",
+    "url": "https://api.gdeltproject.org/example4",
+    "source": "GDELT",
+    "company_query": "Iberdrola",
+    "raw_text_snippet": "La jefa de operaciones y experta financiera de Iberdrola lidera la cumbre internacional sobre descarbonización.",
+    "text_samples": [
+      {
+        "text": "La jefa de operaciones y experta financiera de Iberdrola lidera la cumbre internacional sobre descarbonización.",
+        "metrics": {
+          "sentence_female_ratio": 0.62,
+          "sentence_male_ratio": 0.2,
+          "sentence_neutral_ratio": 0.18,
+          "lexical_root_diversity": 0.74,
+          "feminine_suffix_ratio": 0.76,
+          "female_mention_frequency": 14,
+          "relative_frequency_score": 0.68,
+          "syntactic_agency_ratio": 0.72,
+          "expert_quote_ratio": 0.74,
+          "headline_presence": 1.0
+        }
+      },
+      {
+        "text": "Analistas internacionales destacaron que la consejera ejecutiva de Iberdrola estructuró el acuerdo de bonos verdes con respaldo unánime.",
+        "metrics": {
+          "sentence_female_ratio": 0.67,
+          "sentence_male_ratio": 0.2,
+          "sentence_neutral_ratio": 0.18,
+          "lexical_root_diversity": 0.74,
+          "feminine_suffix_ratio": 0.76,
+          "female_mention_frequency": 15,
+          "relative_frequency_score": 0.68,
+          "syntactic_agency_ratio": 0.72,
+          "expert_quote_ratio": 0.74,
+          "headline_presence": 1.0
+        }
+      },
+      {
+        "text": "El informe corporativo sitúa a la directora de sostenibilidad de Iberdrola como una referencia técnica en auditorías de impacto medioambiental.",
+        "metrics": {
+          "sentence_female_ratio": 0.72,
+          "sentence_male_ratio": 0.2,
+          "sentence_neutral_ratio": 0.18,
+          "lexical_root_diversity": 0.74,
+          "feminine_suffix_ratio": 0.76,
+          "female_mention_frequency": 16,
+          "relative_frequency_score": 0.68,
+          "syntactic_agency_ratio": 0.72,
+          "expert_quote_ratio": 0.74,
+          "headline_presence": 1.0
+        }
+      }
+    ],
+    "media_image_samples": [],
+    "media_audio_samples": [],
+    "media_video_samples": [],
+    "demographic_subgroup": "Mujer_Senior_Directiva",
+    "available_modalities": [
+      "Texto"
+    ],
+    "text_metrics": {
+      "sentence_female_ratio": 0.62,
+      "sentence_male_ratio": 0.2,
+      "sentence_neutral_ratio": 0.18,
+      "lexical_root_diversity": 0.74,
+      "feminine_suffix_ratio": 0.76,
+      "female_mention_frequency": 14,
+      "relative_frequency_score": 0.68,
+      "syntactic_agency_ratio": 0.72,
+      "expert_quote_ratio": 0.74,
+      "headline_presence": 1.0
+    },
+    "audio_metrics": null,
+    "image_metrics": null,
+    "video_metrics": null,
+    "biometric_purged": true
+  },
+  {
+    "doc_id": "doc_005",
+    "title": "Hemeroteca audiovisual y archivo histórico de Iberdrola",
+    "url": "https://archive.org/details/example5",
+    "source": "Internet Archive",
+    "company_query": "Iberdrola",
+    "raw_text_snippet": "En el metraje de archivo institucional de 1998 de Iberdrola, la técnica de laboratorio participa en calidad de apoyo en la mesa de trabajo.",
+    "text_samples": [
+      {
+        "text": "En el metraje de archivo institucional de 1998 de Iberdrola, la técnica de laboratorio participa en calidad de apoyo en la mesa de trabajo.",
+        "metrics": {
+          "sentence_female_ratio": 0.28,
+          "sentence_male_ratio": 0.52,
+          "sentence_neutral_ratio": 0.2,
+          "lexical_root_diversity": 0.35,
+          "feminine_suffix_ratio": 0.32,
+          "female_mention_frequency": 4,
+          "relative_frequency_score": 0.3,
+          "syntactic_agency_ratio": 0.3,
+          "expert_quote_ratio": 0.25,
+          "headline_presence": 0.0
+        }
+      }
+    ],
+    "media_image_samples": [
+      {
+        "image_path": "data/ephemeral_samples/guardian_directora_1.jpg",
+        "metrics": {
+          "visual_gender_female_ratio": 0.32,
+          "shot_scale_importance_score": 0.35,
+          "camera_angle_power_score": 0.38,
+          "rule_of_thirds_alignment": 0.4,
+          "shadow_lighting_prominence": 0.42,
+          "cross_image_appearance_count": 2,
+          "cross_image_persistence_ratio": 0.3,
+          "spatial_centrality_score": 0.4,
+          "leadership_visual_context": 0.3
+        }
+      }
+    ],
+    "media_audio_samples": [
+      {
+        "audio_path": "data/ephemeral_samples/archive_cinta_historica_1998_declaracion.wav",
+        "metrics": {
+          "opened_by": "male",
+          "closed_by": "neutral",
+          "female_opened_score": 0.0,
+          "female_closed_score": 0.5,
+          "middle_segment_female_ratio": 0.3,
+          "female_speaking_time_ratio": 0.28,
+          "female_turn_count": 4,
+          "speaking_turns_ratio": 0.26,
+          "acoustic_gender_confidence": 0.86,
+          "no_interruption_score": 0.45
+        }
+      },
+      {
+        "audio_path": "data/ephemeral_samples/archive_cinta_historica_1998_rueda_prensa.wav",
+        "metrics": {
+          "opened_by": "male",
+          "closed_by": "neutral",
+          "female_opened_score": 0.0,
+          "female_closed_score": 0.5,
+          "middle_segment_female_ratio": 0.42,
+          "female_speaking_time_ratio": 0.18000000000000002,
+          "female_turn_count": 7,
+          "speaking_turns_ratio": 0.33,
+          "acoustic_gender_confidence": 0.86,
+          "no_interruption_score": 0.4
+        }
+      }
+    ],
+    "media_video_samples": [
+      {
+        "video_path": "data/ephemeral_samples/archive_rollo_a_1998_intervencion.mp4",
+        "metrics": {
+          "audio_track": {
+            "opened_by": "male",
+            "closed_by": "neutral",
+            "female_opened_score": 0.0,
+            "female_closed_score": 0.5,
+            "middle_segment_female_ratio": 0.3,
+            "female_speaking_time_ratio": 0.28,
+            "female_turn_count": 4,
+            "speaking_turns_ratio": 0.26,
+            "acoustic_gender_confidence": 0.86,
+            "no_interruption_score": 0.45
+          },
+          "frame_set_visuals": {
+            "visual_gender_female_ratio": 0.32,
+            "shot_scale_importance_score": 0.35,
+            "camera_angle_power_score": 0.38,
+            "rule_of_thirds_alignment": 0.4,
+            "shadow_lighting_prominence": 0.42,
+            "cross_image_appearance_count": 2,
+            "cross_image_persistence_ratio": 0.3,
+            "spatial_centrality_score": 0.4,
+            "leadership_visual_context": 0.3
+          },
+          "optical_flow_motion_score": 0.3,
+          "kinetic_dominance_ratio": 0.28,
+          "silhouette_change_histogram_score": 0.32,
+          "female_screen_time_ratio": 0.3,
+          "active_speaker_sync_score": 0.25
+        }
+      },
+      {
+        "video_path": "data/ephemeral_samples/archive_rollo_b_1998_conclusion.mp4",
+        "metrics": {
+          "audio_track": {
+            "opened_by": "male",
+            "closed_by": "neutral",
+            "female_opened_score": 0.0,
+            "female_closed_score": 0.5,
+            "middle_segment_female_ratio": 0.3,
+            "female_speaking_time_ratio": 0.28,
+            "female_turn_count": 4,
+            "speaking_turns_ratio": 0.26,
+            "acoustic_gender_confidence": 0.86,
+            "no_interruption_score": 0.45
+          },
+          "frame_set_visuals": {
+            "visual_gender_female_ratio": 0.32,
+            "shot_scale_importance_score": 0.35,
+            "camera_angle_power_score": 0.38,
+            "rule_of_thirds_alignment": 0.4,
+            "shadow_lighting_prominence": 0.42,
+            "cross_image_appearance_count": 2,
+            "cross_image_persistence_ratio": 0.3,
+            "spatial_centrality_score": 0.4,
+            "leadership_visual_context": 0.3
+          },
+          "optical_flow_motion_score": 0.44999999999999996,
+          "kinetic_dominance_ratio": 0.2,
+          "silhouette_change_histogram_score": 0.32,
+          "female_screen_time_ratio": 0.4,
+          "active_speaker_sync_score": 0.25
+        }
+      }
+    ],
+    "demographic_subgroup": "Mujer_Joven_MinoríaÉtnica",
+    "available_modalities": [
+      "Texto",
+      "Audio",
+      "Imagen",
+      "Vídeo"
+    ],
+    "text_metrics": {
+      "sentence_female_ratio": 0.28,
+      "sentence_male_ratio": 0.52,
+      "sentence_neutral_ratio": 0.2,
+      "lexical_root_diversity": 0.35,
+      "feminine_suffix_ratio": 0.32,
+      "female_mention_frequency": 4,
+      "relative_frequency_score": 0.3,
+      "syntactic_agency_ratio": 0.3,
+      "expert_quote_ratio": 0.25,
+      "headline_presence": 0.0
+    },
+    "audio_metrics": {
+      "opened_by": "male",
+      "closed_by": "neutral",
+      "female_opened_score": 0.0,
+      "female_closed_score": 0.5,
+      "middle_segment_female_ratio": 0.3,
+      "female_speaking_time_ratio": 0.28,
+      "female_turn_count": 4,
+      "speaking_turns_ratio": 0.26,
+      "acoustic_gender_confidence": 0.86,
+      "no_interruption_score": 0.45
+    },
+    "image_metrics": {
+      "visual_gender_female_ratio": 0.32,
+      "shot_scale_importance_score": 0.35,
+      "camera_angle_power_score": 0.38,
+      "rule_of_thirds_alignment": 0.4,
+      "shadow_lighting_prominence": 0.42,
+      "cross_image_appearance_count": 2,
+      "cross_image_persistence_ratio": 0.3,
+      "spatial_centrality_score": 0.4,
+      "leadership_visual_context": 0.3
+    },
+    "video_metrics": {
+      "audio_track": {
+        "opened_by": "male",
+        "closed_by": "neutral",
+        "female_opened_score": 0.0,
+        "female_closed_score": 0.5,
+        "middle_segment_female_ratio": 0.3,
+        "female_speaking_time_ratio": 0.28,
+        "female_turn_count": 4,
+        "speaking_turns_ratio": 0.26,
+        "acoustic_gender_confidence": 0.86,
+        "no_interruption_score": 0.45
+      },
+      "frame_set_visuals": {
+        "visual_gender_female_ratio": 0.32,
+        "shot_scale_importance_score": 0.35,
+        "camera_angle_power_score": 0.38,
+        "rule_of_thirds_alignment": 0.4,
+        "shadow_lighting_prominence": 0.42,
+        "cross_image_appearance_count": 2,
+        "cross_image_persistence_ratio": 0.3,
+        "spatial_centrality_score": 0.4,
+        "leadership_visual_context": 0.3
+      },
+      "optical_flow_motion_score": 0.3,
+      "kinetic_dominance_ratio": 0.28,
+      "silhouette_change_histogram_score": 0.32,
+      "female_screen_time_ratio": 0.3,
+      "active_speaker_sync_score": 0.25
+    },
+    "biometric_purged": true
+  }
+]
