@@ -33,12 +33,13 @@ tenacity>=8.2.0
 sentence-transformers>=3.0.0
 torch>=2.2.0
 pytest>=8.0.0
-# --- Ingesta: conectores, descarga y reranker ---
-aiohttp>=3.9.0
-tenacity>=8.2.0
-sentence-transformers>=3.0.0
-torch>=2.2.0
-pytest>=8.0.0
 
-# --- Analisis de texto ---
+# --- Análisis de texto, imagen y audio  ---
+# Además hay que instalar a mano inaSpeechSegmenter y los modelos de spaCy (ver README)
 spacy>=3.8,<3.9
+gender-guesser>=0.4.0
+tensorflow>=2.20
+soundfile
+pytextgrid
+opencv-python-headless>=4.8
+open_clip_torch>=2.24

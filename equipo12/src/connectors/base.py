@@ -31,16 +31,10 @@ class RetryableHTTPError(Exception):
 
 
 class BaseMediaConnector(ABC):
-    """Interfaz común: buscar en una fuente y devolver documentos normalizados.
-
-    Cada conector solo busca y normaliza metadatos (URLs remotas).
-    La descarga de multimedia la hace MediaDownloader después del reranking.
-    """
+    """Interfaz común: buscar en una fuente y devolver documentos normalizados."""
 
     source: MediaSource
-    #: Peticiones simultáneas máximas contra esta fuente
     max_concurrency: int = 4
-    #: Pausa mínima entre peticiones (segundos), para respetar la cuota
     min_interval: float = 0.0
 
     def __init__(
@@ -57,7 +51,6 @@ class BaseMediaConnector(ABC):
         self._last_call = 0.0
         self._lock = asyncio.Lock()
 
-    # ---------- ciclo de vida de la sesión ----------
     async def __aenter__(self) -> "BaseMediaConnector":
         if self._session is None:
             self._session = aiohttp.ClientSession(
@@ -73,7 +66,6 @@ class BaseMediaConnector(ABC):
             await self._session.close()
             self._session = None
 
-    # ---------- utilidades ----------
     @staticmethod
     def make_doc_id(source: MediaSource, url: str) -> str:
         return hashlib.sha1(f"{source.value}|{url}".encode("utf-8")).hexdigest()[:16]
@@ -89,12 +81,11 @@ class BaseMediaConnector(ABC):
             self._last_call = loop.time()
 
     async def get_json(self, url: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        """GET con reintentos exponenciales ante 429/5xx y errores de red."""
         if self._session is None:
             raise RuntimeError("Usa el conector dentro de 'async with' o pásale una sesión.")
         async for attempt in AsyncRetrying(
             stop=stop_after_attempt(self.max_retries),
-            wait=wait_exponential(multiplier=1, min=max(1, self.min_interval), max=30),wait=wait_exponential(multiplier=1, min=max(1, self.min_interval), max=30),
+            wait=wait_exponential(multiplier=1, min=max(1, self.min_interval), max=30),
             retry=retry_if_exception_type(
                 (RetryableHTTPError, aiohttp.ClientConnectionError, asyncio.TimeoutError)
             ),
@@ -115,16 +106,8 @@ class BaseMediaConnector(ABC):
                                 await asyncio.sleep(max(self.min_interval, 5))
                                 raise RetryableHTTPError(f"{self.source.value}: límite de peticiones")
                             raise()
-                        try:
-                            return await resp.json(content_type=None)
-                        except ValueError:
-                            text = await resp.text()
-                            if "limit requests" in text.lower():
-                                await asyncio.sleep(max(self.min_interval, 5))
-                                raise RetryableHTTPError(f"{self.source.value}: límite de peticiones")
-                            raise
+                    
 
-    # ---------- contrato ----------
     @abstractmethod
     async def fetch_top_candidates(self, query: str, limit: int) -> List[UnifiedMediaDocument]:
         """Devuelve hasta `limit` documentos candidatos normalizados."""

@@ -1,0 +1,354 @@
+[
+  {
+    "doc_id": "mock_noticia_directora",
+    "title": "Laura Martín presenta el plan de inversión de EcoRed",
+    "url": "https://example.org/noticia-directora",
+    "source": "The Guardian",
+    "company_query": "EcoRed",
+    "raw_text_snippet": "La directora general de EcoRed, Laura Martín, presentó ayer el nuevo plan de inversión. «Vamos a duplicar la capacidad renovable», explicó Martín. La ingeniera jefa, Carmen Ruiz, detalló el calendario de obras. El consejero Pedro Gómez asistió a la presentación.",
+    "text_samples": [
+      {
+        "text": "La directora general de EcoRed, Laura Martín, presentó ayer el nuevo plan de inversión.",
+        "metrics": {
+          "sentence_female_ratio": 1.0,
+          "sentence_male_ratio": 0.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 1.0,
+          "feminine_suffix_ratio": 1.0,
+          "female_mention_frequency": 1,
+          "relative_frequency_score": 1.0,
+          "syntactic_agency_ratio": 1.0,
+          "expert_quote_ratio": 0.5,
+          "headline_presence": 1.0
+        }
+      },
+      {
+        "text": "«Vamos a duplicar la capacidad renovable», explicó Martín.",
+        "metrics": {
+          "sentence_female_ratio": 1.0,
+          "sentence_male_ratio": 0.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 1.0,
+          "feminine_suffix_ratio": 0.5,
+          "female_mention_frequency": 1,
+          "relative_frequency_score": 1.0,
+          "syntactic_agency_ratio": 1.0,
+          "expert_quote_ratio": 1.0,
+          "headline_presence": 1.0
+        }
+      },
+      {
+        "text": "La ingeniera jefa, Carmen Ruiz, detalló el calendario de obras.",
+        "metrics": {
+          "sentence_female_ratio": 1.0,
+          "sentence_male_ratio": 0.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 1.0,
+          "feminine_suffix_ratio": 1.0,
+          "female_mention_frequency": 2,
+          "relative_frequency_score": 1.0,
+          "syntactic_agency_ratio": 1.0,
+          "expert_quote_ratio": 0.5,
+          "headline_presence": 1.0
+        }
+      },
+      {
+        "text": "El consejero Pedro Gómez asistió a la presentación.",
+        "metrics": {
+          "sentence_female_ratio": 0.0,
+          "sentence_male_ratio": 1.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 0.0,
+          "feminine_suffix_ratio": 0.0,
+          "female_mention_frequency": 0,
+          "relative_frequency_score": 0.0,
+          "syntactic_agency_ratio": 0.0,
+          "expert_quote_ratio": 0.5,
+          "headline_presence": 1.0
+        }
+      }
+    ],
+    "media_image_samples": [
+      {
+        "image_path": "https://example.org/foto-grupo.jpg",
+        "metrics": {
+          "visual_gender_female_ratio": 0.5,
+          "shot_scale_importance_score": 0.5518,
+          "camera_angle_power_score": 0.5159,
+          "rule_of_thirds_alignment": 0.6732,
+          "shadow_lighting_prominence": 0.8578,
+          "cross_image_appearance_count": 1,
+          "cross_image_persistence_ratio": 1.0,
+          "spatial_centrality_score": 0.449,
+          "leadership_visual_context": 0.1758
+        }
+      }
+    ],
+    "media_audio_samples": [],
+    "media_video_samples": [],
+    "demographic_subgroup": "es_caras-grandes",
+    "available_modalities": [
+      "Texto",
+      "Imagen"
+    ],
+    "text_metrics": {
+      "sentence_female_ratio": 0.8,
+      "sentence_male_ratio": 0.2,
+      "sentence_neutral_ratio": 0.0,
+      "lexical_root_diversity": 0.75,
+      "feminine_suffix_ratio": 0.75,
+      "female_mention_frequency": 5,
+      "relative_frequency_score": 0.8333,
+      "syntactic_agency_ratio": 0.8,
+      "expert_quote_ratio": 1.0,
+      "headline_presence": 1.0
+    },
+    "audio_metrics": null,
+    "image_metrics": {
+      "visual_gender_female_ratio": 0.5,
+      "shot_scale_importance_score": 0.5518,
+      "camera_angle_power_score": 0.5159,
+      "rule_of_thirds_alignment": 0.6732,
+      "shadow_lighting_prominence": 0.8578,
+      "cross_image_appearance_count": 1,
+      "cross_image_persistence_ratio": 1.0,
+      "spatial_centrality_score": 0.449,
+      "leadership_visual_context": 0.1758
+    },
+    "video_metrics": null,
+    "biometric_purged": true
+  },
+  {
+    "doc_id": "mock_entrevista_video",
+    "title": "Entrevista sobre redes eléctricas",
+    "url": "https://example.org/entrevista",
+    "source": "Internet Archive",
+    "company_query": "EcoRed",
+    "raw_text_snippet": "Entrevista a la investigadora Ana Torres sobre redes eléctricas. La investigadora explicó los retos del almacenamiento.",
+    "text_samples": [
+      {
+        "text": "Entrevista a la investigadora Ana Torres sobre redes eléctricas.",
+        "metrics": {
+          "sentence_female_ratio": 1.0,
+          "sentence_male_ratio": 0.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 0.5,
+          "feminine_suffix_ratio": 1.0,
+          "female_mention_frequency": 1,
+          "relative_frequency_score": 1.0,
+          "syntactic_agency_ratio": 0.5,
+          "expert_quote_ratio": 0.5,
+          "headline_presence": 0.0
+        }
+      },
+      {
+        "text": "La investigadora explicó los retos del almacenamiento.",
+        "metrics": {
+          "sentence_female_ratio": 1.0,
+          "sentence_male_ratio": 0.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 1.0,
+          "feminine_suffix_ratio": 1.0,
+          "female_mention_frequency": 1,
+          "relative_frequency_score": 1.0,
+          "syntactic_agency_ratio": 1.0,
+          "expert_quote_ratio": 1.0,
+          "headline_presence": 0.0
+        }
+      }
+    ],
+    "media_image_samples": [],
+    "media_audio_samples": [
+      {
+        "audio_path": "https://example.org/entrevista.mp4",
+        "metrics": {
+          "opened_by": "female",
+          "closed_by": "male",
+          "female_opened_score": 1.0,
+          "female_closed_score": 0.0,
+          "middle_segment_female_ratio": 0.6237,
+          "female_speaking_time_ratio": 0.531,
+          "female_turn_count": 1,
+          "speaking_turns_ratio": 0.5,
+          "acoustic_gender_confidence": 1.0,
+          "no_interruption_score": 1.0
+        }
+      }
+    ],
+    "media_video_samples": [
+      {
+        "video_path": "https://example.org/entrevista.mp4",
+        "metrics": {
+          "audio_track": {
+            "opened_by": "female",
+            "closed_by": "male",
+            "female_opened_score": 1.0,
+            "female_closed_score": 0.0,
+            "middle_segment_female_ratio": 0.6237,
+            "female_speaking_time_ratio": 0.531,
+            "female_turn_count": 1,
+            "speaking_turns_ratio": 0.5,
+            "acoustic_gender_confidence": 1.0,
+            "no_interruption_score": 1.0
+          },
+          "frame_set_visuals": {
+            "visual_gender_female_ratio": 0.5333,
+            "shot_scale_importance_score": 0.5475,
+            "camera_angle_power_score": 0.5114,
+            "rule_of_thirds_alignment": 0.6926,
+            "shadow_lighting_prominence": 0.9246,
+            "cross_image_appearance_count": 8,
+            "cross_image_persistence_ratio": 0.5333,
+            "spatial_centrality_score": 0.6083,
+            "leadership_visual_context": 0.1951
+          },
+          "optical_flow_motion_score": 0.7727,
+          "kinetic_dominance_ratio": 0.7953,
+          "silhouette_change_histogram_score": 0.7352,
+          "female_screen_time_ratio": 0.5333,
+          "active_speaker_sync_score": 0.8
+        }
+      }
+    ],
+    "demographic_subgroup": "es_audio-limpio_caras-grandes",
+    "available_modalities": [
+      "Texto",
+      "Audio",
+      "Vídeo"
+    ],
+    "text_metrics": {
+      "sentence_female_ratio": 0.6667,
+      "sentence_male_ratio": 0.0,
+      "sentence_neutral_ratio": 0.3333,
+      "lexical_root_diversity": 1.0,
+      "feminine_suffix_ratio": 1.0,
+      "female_mention_frequency": 2,
+      "relative_frequency_score": 1.0,
+      "syntactic_agency_ratio": 1.0,
+      "expert_quote_ratio": 1.0,
+      "headline_presence": 0.0
+    },
+    "audio_metrics": {
+      "opened_by": "female",
+      "closed_by": "male",
+      "female_opened_score": 1.0,
+      "female_closed_score": 0.0,
+      "middle_segment_female_ratio": 0.6237,
+      "female_speaking_time_ratio": 0.531,
+      "female_turn_count": 1,
+      "speaking_turns_ratio": 0.5,
+      "acoustic_gender_confidence": 1.0,
+      "no_interruption_score": 1.0
+    },
+    "image_metrics": null,
+    "video_metrics": {
+      "audio_track": {
+        "opened_by": "female",
+        "closed_by": "male",
+        "female_opened_score": 1.0,
+        "female_closed_score": 0.0,
+        "middle_segment_female_ratio": 0.6237,
+        "female_speaking_time_ratio": 0.531,
+        "female_turn_count": 1,
+        "speaking_turns_ratio": 0.5,
+        "acoustic_gender_confidence": 1.0,
+        "no_interruption_score": 1.0
+      },
+      "frame_set_visuals": {
+        "visual_gender_female_ratio": 0.5333,
+        "shot_scale_importance_score": 0.5475,
+        "camera_angle_power_score": 0.5114,
+        "rule_of_thirds_alignment": 0.6926,
+        "shadow_lighting_prominence": 0.9246,
+        "cross_image_appearance_count": 8,
+        "cross_image_persistence_ratio": 0.5333,
+        "spatial_centrality_score": 0.6083,
+        "leadership_visual_context": 0.1951
+      },
+      "optical_flow_motion_score": 0.7727,
+      "kinetic_dominance_ratio": 0.7953,
+      "silhouette_change_histogram_score": 0.7352,
+      "female_screen_time_ratio": 0.5333,
+      "active_speaker_sync_score": 0.8
+    },
+    "biometric_purged": true
+  },
+  {
+    "doc_id": "mock_noticia_presidente",
+    "title": "El presidente de EcoRed presenta los resultados",
+    "url": "https://example.org/noticia-presidente",
+    "source": "GDELT",
+    "company_query": "EcoRed",
+    "raw_text_snippet": "El presidente de EcoRed, Javier López, anunció los resultados del trimestre. «Ha sido un año excelente», afirmó López. Según el director financiero, Miguel Sanz, el beneficio creció un 12 %. La empresa también agradeció el trabajo de su secretaria.",
+    "text_samples": [
+      {
+        "text": "El presidente de EcoRed, Javier López, anunció los resultados del trimestre.",
+        "metrics": {
+          "sentence_female_ratio": 0.0,
+          "sentence_male_ratio": 1.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 0.0,
+          "feminine_suffix_ratio": 0.0,
+          "female_mention_frequency": 0,
+          "relative_frequency_score": 0.0,
+          "syntactic_agency_ratio": 0.0,
+          "expert_quote_ratio": 0.0,
+          "headline_presence": 0.0
+        }
+      },
+      {
+        "text": "«Ha sido un año excelente», afirmó López.",
+        "metrics": {
+          "sentence_female_ratio": 0.0,
+          "sentence_male_ratio": 1.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 0.0,
+          "feminine_suffix_ratio": 0.5,
+          "female_mention_frequency": 0,
+          "relative_frequency_score": 0.0,
+          "syntactic_agency_ratio": 0.0,
+          "expert_quote_ratio": 0.0,
+          "headline_presence": 0.0
+        }
+      },
+      {
+        "text": "La empresa también agradeció el trabajo de su secretaria.",
+        "metrics": {
+          "sentence_female_ratio": 1.0,
+          "sentence_male_ratio": 0.0,
+          "sentence_neutral_ratio": 0.0,
+          "lexical_root_diversity": 0.5,
+          "feminine_suffix_ratio": 1.0,
+          "female_mention_frequency": 1,
+          "relative_frequency_score": 1.0,
+          "syntactic_agency_ratio": 0.5,
+          "expert_quote_ratio": 0.5,
+          "headline_presence": 0.0
+        }
+      }
+    ],
+    "media_image_samples": [],
+    "media_audio_samples": [],
+    "media_video_samples": [],
+    "demographic_subgroup": "es_solo-texto",
+    "available_modalities": [
+      "Texto"
+    ],
+    "text_metrics": {
+      "sentence_female_ratio": 0.2,
+      "sentence_male_ratio": 0.8,
+      "sentence_neutral_ratio": 0.0,
+      "lexical_root_diversity": 0.0,
+      "feminine_suffix_ratio": 0.25,
+      "female_mention_frequency": 1,
+      "relative_frequency_score": 0.2,
+      "syntactic_agency_ratio": 0.0,
+      "expert_quote_ratio": 0.0,
+      "headline_presence": 0.0
+    },
+    "audio_metrics": null,
+    "image_metrics": null,
+    "video_metrics": null,
+    "biometric_purged": true
+  }
+]
