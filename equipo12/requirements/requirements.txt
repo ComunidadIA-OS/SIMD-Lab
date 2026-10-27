@@ -34,5 +34,12 @@ sentence-transformers>=3.0,<4
 torch>=2.2
 pytest>=8.0
 
-# --- Analisis de texto ---
+# --- Análisis de texto, imagen y audio  ---
+# Además hay que instalar a mano inaSpeechSegmenter y los modelos de spaCy (ver README)
 spacy>=3.8,<3.9
+gender-guesser>=0.4.0
+tensorflow>=2.20
+soundfile
+pytextgrid
+opencv-python-headless>=4.8
+open_clip_torch>=2.24
