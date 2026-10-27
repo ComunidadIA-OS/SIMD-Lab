@@ -94,7 +94,7 @@ class BaseMediaConnector(ABC):
             raise RuntimeError("Usa el conector dentro de 'async with' o pásale una sesión.")
         async for attempt in AsyncRetrying(
             stop=stop_after_attempt(self.max_retries),
-            wait=wait_exponential(multiplier=1, min=max(1, self.min_interval), max=30),wait=wait_exponential(multiplier=1, min=max(1, self.min_interval), max=30),
+            wait=wait_exponential(multiplier=1, min=max(1, self.min_interval), max=30),
             retry=retry_if_exception_type(
                 (RetryableHTTPError, aiohttp.ClientConnectionError, asyncio.TimeoutError)
             ),
@@ -107,14 +107,6 @@ class BaseMediaConnector(ABC):
                         if resp.status == 429 or resp.status >= 500:
                             raise RetryableHTTPError(f"{self.source.value}: HTTP {resp.status}")
                         resp.raise_for_status()
-                        try:
-                            return await resp.json(content_type=None)
-                        except ValueError:
-                            text = await resp.text()
-                            if "limit requests" in text.lower():
-                                await asyncio.sleep(max(self.min_interval, 5))
-                                raise RetryableHTTPError(f"{self.source.value}: límite de peticiones")
-                            raise()
                         try:
                             return await resp.json(content_type=None)
                         except ValueError:

@@ -17,8 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar requisitos de Python de la Integrante 3
-COPY requirements/requirements.txt /app/requirements/requirements.txt
+# Instalar requisitos de Python
 COPY requirements/requirements.txt /app/requirements/requirements.txt
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r /app/requirements/requirements.txt

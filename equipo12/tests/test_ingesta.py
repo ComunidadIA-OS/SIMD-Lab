@@ -1,4 +1,4 @@
-"""Pruebas sin red de la parte de ingesta (Integrante 1).
+"""Pruebas sin red de la parte de ingesta.
 
 Ejecutar desde la raíz del proyecto:  PYTHONPATH=. pytest tests/test_ingesta.py -q
 """
@@ -87,3 +87,96 @@ def test_orchestrator_survives_failing_source():
     (docs_ok, rep_ok), (docs_ko, rep_ko) = asyncio.run(run())
     assert len(docs_ok) == 1 and rep_ok.ok
     assert docs_ko == [] and not rep_ko.ok and "caída" in rep_ko.error
+
+
+
+# ---------- pruebas añadidas ----------
+import pytest
+from aiohttp import web
+
+from src.common.schemas import normalize_language
+from src.connectors.media_downloader import MediaDownloader
+from src.connectors.wikimedia_client import WikimediaConnector
+
+
+@pytest.mark.parametrize("raw, expected", [
+    ("Spanish", "es"), ("spa", "es"), ("es-ES", "es"), ("es", "es"),
+    ("English", "en"), ("eng", "en"), ("", None), (None, None), ("klingon", None),
+])
+def test_normalize_language(raw, expected):
+    assert normalize_language(raw) == expected
+
+
+def test_language_normalized_in_document():
+    d = UnifiedMediaDocument(doc_id="x", source=MediaSource.GDELT, company_query="X",
+                             url="u", title="t", language="Spanish")
+    assert d.language == "es"
+
+
+def test_downloader_rejects_svg():
+    assert not MediaDownloader.is_supported_image_url("https://upload.wikimedia.org/logo.svg")
+    assert not MediaDownloader.is_supported_image_url("https://x/anim.gif?w=200")
+    assert MediaDownloader.is_supported_image_url("https://x/foto.JPG")
+    assert MediaDownloader.is_supported_image_url("https://x/thumbnail")  # sin extensión: se decide por Content-Type
+
+
+def test_wikimedia_dedupes_same_entity_across_languages():
+    conn = WikimediaConnector()
+
+    async def fake_search(lang, query, limit):
+        return [1]
+
+    async def fake_page(lang, pageid, query):
+        return UnifiedMediaDocument(doc_id=lang, source=MediaSource.WIKIMEDIA, company_query=query,
+                                    url=f"https://{lang}.wikipedia.org/wiki/Iberdrola", title="Iberdrola",
+                                    language=lang, extra={"wikidata": "Q1"})
+
+    conn._search, conn._page = fake_search, fake_page
+    docs = asyncio.run(conn.search_articles_and_commons("Iberdrola", 10))
+    assert len(docs) == 1 and docs[0].language == "es"
+
+
+def _run_with_server(handler, coro_factory):
+    """Levanta un servidor HTTP local, ejecuta la prueba y lo apaga."""
+    async def run():
+        app = web.Application()
+        app.router.add_get("/", handler)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+        try:
+            return await coro_factory(f"http://127.0.0.1:{port}/")
+        finally:
+            await runner.cleanup()
+    return asyncio.run(run())
+
+
+def test_get_json_retries_after_429():
+    calls = {"n": 0}
+
+    async def handler(request):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return web.Response(status=429)
+        return web.json_response({"ok": True})
+
+    async def check(url):
+        async with GuardianConnector(api_key="x") as conn:
+            return await conn.get_json(url)
+
+    assert _run_with_server(handler, check) == {"ok": True}
+    assert calls["n"] == 2
+
+
+def test_get_json_non_json_raises_value_error():
+    async def handler(request):
+        return web.Response(text="<html>error</html>")
+
+    async def check(url):
+        async with GuardianConnector(api_key="x") as conn:
+            with pytest.raises(ValueError):
+                await conn.get_json(url)
+
+    _run_with_server(handler, check)

@@ -27,6 +27,10 @@ logger = logging.getLogger(__name__)
 DEFAULT_MEDIA_DIR = os.getenv("MEDIA_DIR", "/tmp/ramdisk")
 STREAM_SOURCES = {MediaSource.ARCHIVE}
 
+# Formatos que pueden leer los analizadores de visión
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+IMAGE_MIME = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+
 
 class MediaDownloader:
     def __init__(
@@ -37,6 +41,7 @@ class MediaDownloader:
         fps: int = 1,
         max_images_per_doc: int = 5,
         concurrency: int = 3,
+        ffmpeg_timeout: float = 180.0,
     ) -> None:
         self.base = Path(base_dir)
         self.max_image_bytes = max_image_bytes
@@ -45,7 +50,14 @@ class MediaDownloader:
         self.max_images_per_doc = max_images_per_doc
         self._sem = asyncio.Semaphore(concurrency)
         self.ffmpeg = shutil.which("ffmpeg")
+        self.ffmpeg_timeout = ffmpeg_timeout
 
+    @staticmethod
+    def is_supported_image_url(url: str) -> bool:
+        """False si la URL termina en una extensión que no es jpg/png/webp (p. ej. .svg)."""
+        ext = Path(url.split("?")[0]).suffix.lower()
+        return ext == "" or ext in IMAGE_EXTS
+    
     def doc_dir(self, doc: UnifiedMediaDocument) -> Path:
         d = self.base / doc.doc_id
         d.mkdir(parents=True, exist_ok=True)
@@ -55,6 +67,9 @@ class MediaDownloader:
         try:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as r:
                 r.raise_for_status()
+                mime = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
+                if mime not in IMAGE_MIME:
+                    raise ValueError(f"formato no soportado: {mime or 'desconocido'}")
                 size = 0
                 with open(dest, "wb") as f:
                     async for chunk in r.content.iter_chunked(64 * 1024):
@@ -76,7 +91,13 @@ class MediaDownloader:
             self.ffmpeg, "-hide_banner", "-loglevel", "error", "-y", *args,
             stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE,
         )
-        _, err = await proc.communicate()
+        try:
+            _, err = await asyncio.wait_for(proc.communicate(), timeout=self.ffmpeg_timeout)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+            logger.warning("ffmpeg superó %.0f s: se cancela", self.ffmpeg_timeout)
+            return False
         if proc.returncode != 0:
             logger.warning("ffmpeg falló: %s", err.decode(errors="ignore")[:300])
             return False
@@ -101,9 +122,13 @@ class MediaDownloader:
     async def download_document(self, session: aiohttp.ClientSession, doc: UnifiedMediaDocument) -> UnifiedMediaDocument:
         async with self._sem:
             folder = self.doc_dir(doc)
+
             for i, url in enumerate(doc.image_urls[: self.max_images_per_doc]):
-                ext = Path(url.split("?")[0]).suffix.lower() or ".jpg"
-                dest = folder / f"image_{i}{ext if len(ext) <= 5 else '.jpg'}"
+                if not self.is_supported_image_url(url):
+                    logger.info("Imagen omitida por formato: %s", url)
+                    continue
+                ext = Path(url.split("?")[0]).suffix.lower()
+                dest = folder / f"image_{i}{ext if ext in IMAGE_EXTS else '.jpg'}"
                 if await self._download_image(session, url, dest):
                     doc.image_paths.append(str(dest))
             if doc.source in STREAM_SOURCES:
@@ -120,5 +145,11 @@ class MediaDownloader:
             return list(await asyncio.gather(*(self.download_document(session, d) for d in docs)))
 
     def purge(self, doc_id: str) -> None:
-        """Borra la carpeta de un documento (la Integrante 2 lo llama tras analizarlo)."""
+        """Borra la carpeta de un documento."""
         shutil.rmtree(self.base / doc_id, ignore_errors=True)
+
+    def purge_all(self, docs: List[UnifiedMediaDocument]) -> None:
+        """Borra la multimedia de todos los documentos y vacía sus rutas locales."""
+        for d in docs:
+            self.purge(d.doc_id)
+            d.image_paths, d.audio_paths, d.video_paths, d.frame_dirs = [], [], [], []

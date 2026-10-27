@@ -12,7 +12,7 @@ Pillow>=10.3.0
 
 # --- Gobernanza, Fairness y Cumplimiento EU AI Act ---
 fairlearn>=0.10.0
-pydantic>=2.7.0
+pydantic>=2.7.0, <3
 
 # --- Interfaz Web B2B (Streamlit) y Visualización ---
 streamlit>=1.35.0
@@ -28,17 +28,11 @@ psutil>=5.9.8
 codecarbon>=2.4.2
 
 # --- Ingesta: conectores, descarga y reranker ---
-aiohttp>=3.9.0
-tenacity>=8.2.0
-sentence-transformers>=3.0.0
-torch>=2.2.0
-pytest>=8.0.0
-# --- Ingesta: conectores, descarga y reranker ---
-aiohttp>=3.9.0
-tenacity>=8.2.0
-sentence-transformers>=3.0.0
-torch>=2.2.0
-pytest>=8.0.0
+aiohttp>=3.9,<4
+tenacity>=8.2
+sentence-transformers>=3.0,<4
+torch>=2.2
+pytest>=8.0
 
 # --- Analisis de texto ---
 spacy>=3.8,<3.9

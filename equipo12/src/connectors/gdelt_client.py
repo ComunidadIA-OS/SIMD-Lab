@@ -23,6 +23,10 @@ class GDELTConnector(BaseMediaConnector):
     max_concurrency = 1
     min_interval = 5.0  # GDELT pide no superar ~1 petición cada 5 s
 
+    def __init__(self, **kw) -> None:
+        kw.setdefault("max_retries", 5)  # GDELT devuelve 429 con frecuencia
+        super().__init__(**kw)
+
     @staticmethod
     def _iso(seendate: Optional[str]) -> Optional[str]:
         if not seendate:

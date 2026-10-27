@@ -12,7 +12,6 @@ import os
 import re
 from typing import List, Optional
 import html
-import html
 
 from src.common.schemas import MediaSource, UnifiedMediaDocument
 from src.connectors.base import BaseMediaConnector
@@ -61,12 +60,12 @@ class YouTubeConnector(BaseMediaConnector):
                 source=self.source,
                 company_query=query,
                 url=url,
-                title=html.unescape(sn.get("title", "")),title=html.unescape(sn.get("title", "")),
+                title=html.unescape(sn.get("title", "")),
                 published_date=sn.get("publishedAt"),
                 language=det.get("snippet", {}).get("defaultAudioLanguage"),
                 license="Creative Commons BY" if lic == "creativeCommon" else "Licencia estándar de YouTube",
                 author=sn.get("channelTitle"),
-                raw_text=html.unescape(det.get("snippet", {}).get("description") or sn.get("description") or "") or None,raw_text=html.unescape(det.get("snippet", {}).get("description") or sn.get("description") or "") or None,
+                raw_text=html.unescape(det.get("snippet", {}).get("description") or sn.get("description") or "") or None,
                 image_urls=[thumb] if thumb else [],
                 extra={"video_id": vid, "duration_s": str(seconds), "license": lic},
             ))

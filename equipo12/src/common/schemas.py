@@ -1,8 +1,27 @@
 from enum import Enum
 from typing import Dict, List, Optional
 import numpy as np
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+# Nombres e ISO 639-2 que devuelven las fuentes -> ISO 639-1 de dos letras
+_LANG_ALIASES = {
+    "spanish": "es", "español": "es", "spa": "es",
+    "english": "en", "eng": "en",
+    "catalan": "ca", "català": "ca", "cat": "ca",
+    "french": "fr", "fre": "fr", "fra": "fr",
+    "german": "de", "ger": "de", "deu": "de",
+    "portuguese": "pt", "por": "pt",
+    "italian": "it", "ita": "it",
+}
+# Normalizamos el idioma de las fuentes a un código ISO 639-1 de dos letras
+def normalize_language(value: Optional[str]) -> Optional[str]:
+    """'Spanish', 'spa', 'es-ES' o 'es' -> 'es'. Devuelve None si no se reconoce."""
+    if not value:
+        return None
+    v = str(value).strip().lower().replace("_", "-").split("-")[0]
+    if v in _LANG_ALIASES:
+        return _LANG_ALIASES[v]
+    return v if len(v) == 2 and v.isalpha() else None
 
 class MediaSource(str, Enum):
     WIKIMEDIA = "Wikimedia"
@@ -42,6 +61,11 @@ class UnifiedMediaDocument(BaseModel):
 
     relevance_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Puntuación del reranker")
     extra: Dict[str, str] = Field(default_factory=dict, description="Metadatos propios de cada fuente")
+    
+    @field_validator("language", mode="before")
+    @classmethod
+    def _normalize_language(cls, v):
+        return normalize_language(v)
 
     @property
     def available_modalities(self) -> List[str]:
@@ -60,58 +84,6 @@ class UnifiedMediaDocument(BaseModel):
         """Texto compacto (título + inicio del cuerpo) que usa el reranker."""
         body = (self.raw_text or "")[:max_chars]
         return f"{self.title}\n{body}".strip()
-
-
-class UnifiedMediaDocument(BaseModel):
-    """Documento normalizado que sale de la ingesta (conectores + reranker + descarga).
-
-    Los campos doc_id, title, url, source y company_query se copian tal cual
-    en ExtractedFeaturesPayload.
-    """
-    doc_id: str = Field(..., description="Hash estable de source + url")
-    source: MediaSource
-    company_query: str = Field(..., description="Empresa o término buscado")
-    url: str
-    title: str
-    published_date: Optional[str] = Field(None, description="Fecha ISO 8601 si la fuente la proporciona")
-    language: Optional[str] = Field(None, description="Código o nombre de idioma según la fuente")
-    license: Optional[str] = Field(None, description="Licencia declarada por la fuente, si existe")
-    author: Optional[str] = Field(None, description="Firma, canal o autor")
-    raw_text: Optional[str] = Field(None, description="Texto completo disponible (cuerpo, extracto o descripción)")
-
-    # URLs remotas (las rellenan los conectores; aún no se ha descargado nada)
-    image_urls: List[str] = Field(default_factory=list)
-    audio_urls: List[str] = Field(default_factory=list)
-    video_urls: List[str] = Field(default_factory=list)
-    subtitle_urls: List[str] = Field(default_factory=list)
-
-    # Rutas locales en el volumen efímero (las rellena MediaDownloader tras el reranking)
-    image_paths: List[str] = Field(default_factory=list)
-    audio_paths: List[str] = Field(default_factory=list, description=".wav 16 kHz mono")
-    video_paths: List[str] = Field(default_factory=list, description="Clip .mp4 recortado y reescalado")
-    frame_dirs: List[str] = Field(default_factory=list, description="Carpetas con fotogramas a 1 fps")
-
-    relevance_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Puntuación del reranker")
-    extra: Dict[str, str] = Field(default_factory=dict, description="Metadatos propios de cada fuente")
-
-    @property
-    def available_modalities(self) -> List[str]:
-        mods = []
-        if self.raw_text:
-            mods.append("Texto")
-        if self.image_urls or self.image_paths:
-            mods.append("Imagen")
-        if self.audio_urls or self.audio_paths or self.video_urls:
-            mods.append("Audio")
-        if self.video_urls or self.video_paths:
-            mods.append("Vídeo")
-        return mods
-
-    def rerank_text(self, max_chars: int = 2000) -> str:
-        """Texto compacto (título + inicio del cuerpo) que usa el reranker."""
-        body = (self.raw_text or "")[:max_chars]
-        return f"{self.title}\n{body}".strip()
-
 
 
 class GenderTarget(str, Enum):

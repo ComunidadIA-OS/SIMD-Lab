@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from typing import Dict, Any
 from codecarbon import EmissionsTracker
 import pandas as pd
-import pandas as pd
 
 class ResourceAndCarbonTracker:
     """Mide el consumo real de hardware y emisiones CO2eq con CodeCarbon (EU AI Act Art. 11 / Anexo IV)."""

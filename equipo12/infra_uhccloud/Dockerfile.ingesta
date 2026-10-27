@@ -1,0 +1,31 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    MEDIA_DIR=/tmp/ramdisk \
+    HF_HOME=/models
+
+# ffmpeg: recorte de audio/vídeo de Internet Archive
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# torch en versión CPU (mucho más ligera; el reranker no necesita GPU)
+COPY requirements/requirements.txt requirements/
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r requirements/requirements.txt
+
+# Descargar los modelos al construir la imagen, no en cada arranque
+ARG RERANK_EMBED_MODEL=BAAI/bge-m3
+ARG RERANK_CROSS_MODEL=BAAI/bge-reranker-v2-m3
+ENV RERANK_EMBED_MODEL=${RERANK_EMBED_MODEL} RERANK_CROSS_MODEL=${RERANK_CROSS_MODEL}
+RUN python -c "from sentence_transformers import SentenceTransformer, CrossEncoder; SentenceTransformer('${RERANK_EMBED_MODEL}'); CrossEncoder('${RERANK_CROSS_MODEL}')"
+
+COPY src/common src/common
+COPY src/connectors src/connectors
+COPY src/reranker src/reranker
+COPY tests tests
+
+CMD ["python", "tests/test_ingesta_rerank.py", "--no-download"]
