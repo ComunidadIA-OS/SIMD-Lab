@@ -11,7 +11,6 @@ import aiohttp
 
 from src.common.schemas import MediaSource, UnifiedMediaDocument
 from src.connectors.base import DEFAULT_USER_AGENT, BaseMediaConnector
-from src.connectors.gdelt_client import GDELTConnector
 from src.connectors.guardian_client import GuardianConnector
 from src.connectors.internet_archive_client import InternetArchiveConnector
 from src.connectors.podcastindex_client import PodcastIndexConnector
@@ -23,7 +22,6 @@ logger = logging.getLogger(__name__)
 CONNECTOR_CLASSES = {
     MediaSource.WIKIMEDIA: WikimediaConnector,
     MediaSource.GUARDIAN: GuardianConnector,
-    MediaSource.GDELT: GDELTConnector,
     MediaSource.YOUTUBE: YouTubeConnector,
     MediaSource.ARCHIVE: InternetArchiveConnector,
     MediaSource.PODCAST: PodcastIndexConnector,

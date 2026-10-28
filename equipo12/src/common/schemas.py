@@ -27,7 +27,6 @@ class MediaSource(str, Enum):
     WIKIMEDIA = "Wikimedia"
     ARCHIVE = "Internet Archive"
     YOUTUBE = "YouTube"
-    GDELT = "GDELT"
     GUARDIAN = "The Guardian"
     PODCAST = "Podcast Index"
 

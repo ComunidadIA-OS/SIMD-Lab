@@ -107,12 +107,14 @@ class MediaDownloader:
         t = str(self.max_seconds)
         wav = folder / f"audio_{idx}.wav"
         logger.info("   ffmpeg: recortando %ss de %s (%s)", t, "vídeo" if is_video else "audio", url)
-        if await self._ffmpeg("-t", t, "-i", url, "-vn", "-ac", "1", "-ar", "16000", str(wav)):
+        # Sin User-Agent propio, ffmpeg se presenta como "Lavf" y muchos podcasts (p. ej. podtrac) responden 403
+        ua = ("-user_agent", DEFAULT_USER_AGENT)
+        if await self._ffmpeg(*ua, "-t", t, "-i", url, "-vn", "-ac", "1", "-ar", "16000", str(wav)):
             doc.audio_paths.append(str(wav))
         if not is_video:
             return
         clip = folder / f"video_{idx}.mp4"
-        if await self._ffmpeg("-t", t, "-i", url, "-vf", "scale=-2:480", "-c:v", "libx264",
+        if await self._ffmpeg(*ua, "-t", t, "-i", url, "-vf", "scale=-2:480", "-c:v", "libx264",
                               "-preset", "veryfast", "-c:a", "aac", str(clip)):
             doc.video_paths.append(str(clip))
             frames = folder / f"frames_{idx}"

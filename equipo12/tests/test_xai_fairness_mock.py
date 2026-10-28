@@ -338,7 +338,7 @@ def _build_sample_doc(
         active_speaker_sync_score=0.75 if level in ["high", "medium_high"] else 0.25,
     )
 
-    if source == MediaSource.GDELT:
+    if not (image_paths or audio_paths or video_paths):   # documento solo de texto
         final_txt, final_aud, final_img, final_vid = txt, None, None, None
     elif source == MediaSource.GUARDIAN:
         final_txt, final_aud, final_img, final_vid = txt, None, img, None
@@ -486,8 +486,8 @@ def generate_mock_dataset(
         _build_sample_doc(
             doc_id="doc_004",
             title=f"Cobertura global de prensa sobre sostenibilidad en {company}",
-            url="https://api.gdeltproject.org/example4",
-            source=MediaSource.GDELT,
+            url="https://www.theguardian.com/example4",
+            source=MediaSource.GUARDIAN,
             company=company,
             subgroup="Mujer_Senior_Directiva",
             level="medium_high",

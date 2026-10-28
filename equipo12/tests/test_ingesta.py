@@ -6,7 +6,6 @@ import asyncio
 import hashlib
 
 from src.common.schemas import MediaSource, UnifiedMediaDocument
-from src.connectors.gdelt_client import GDELTConnector
 from src.connectors.guardian_client import GuardianConnector
 from src.connectors.internet_archive_client import InternetArchiveConnector
 from src.connectors.orchestrator import FederatedSearchOrchestrator
@@ -27,13 +26,6 @@ def test_guardian_parse():
     d = GuardianConnector(api_key="x").parse_results(data, "Iberdrola")[0]
     assert d.title == "H" and d.author == "Ana" and d.raw_text == "Cuerpo"
     assert d.image_urls == ["https://img"] and d.source == MediaSource.GUARDIAN
-
-
-def test_gdelt_parse_date():
-    data = {"articles": [{"url": "https://n/1", "title": "T", "seendate": "20260115T103000Z",
-                          "socialimage": "https://i", "domain": "n", "language": "Spanish"}]}
-    d = GDELTConnector().parse_results(data, "Iberdrola")[0]
-    assert d.published_date == "2026-01-15T10:30:00Z" and d.image_urls == ["https://i"]
 
 
 def test_youtube_parse_and_duration_filter():
@@ -78,7 +70,7 @@ def test_orchestrator_survives_failing_source():
             return [_doc(1, self.source, None)]
 
     class Boom:
-        source = MediaSource.GDELT
+        source = MediaSource.GUARDIAN
         async def fetch_top_candidates(self, q, n):
             raise RuntimeError("caída")
 
@@ -107,11 +99,6 @@ from src.connectors.wikimedia_client import WikimediaConnector
 def test_normalize_language(raw, expected):
     assert normalize_language(raw) == expected
 
-
-def test_language_normalized_in_document():
-    d = UnifiedMediaDocument(doc_id="x", source=MediaSource.GDELT, company_query="X",
-                             url="u", title="t", language="Spanish")
-    assert d.language == "es"
 
 
 def test_downloader_rejects_svg():

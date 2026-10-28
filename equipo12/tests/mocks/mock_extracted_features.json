@@ -368,8 +368,8 @@
   {
     "doc_id": "doc_004",
     "title": "Cobertura global de prensa sobre sostenibilidad en Iberdrola",
-    "url": "https://api.gdeltproject.org/example4",
-    "source": "GDELT",
+    "url": "https://www.theguardian.com/example4",
+    "source": "The Guardian",
     "company_query": "Iberdrola",
     "raw_text_snippet": "La jefa de operaciones y experta financiera de Iberdrola lidera la cumbre internacional sobre descarbonización.",
     "text_samples": [
