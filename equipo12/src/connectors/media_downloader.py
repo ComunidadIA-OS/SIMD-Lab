@@ -25,7 +25,7 @@ from src.connectors.base import DEFAULT_USER_AGENT
 logger = logging.getLogger(__name__)
 
 DEFAULT_MEDIA_DIR = os.getenv("MEDIA_DIR", "/tmp/ramdisk")
-STREAM_SOURCES = {MediaSource.ARCHIVE}
+STREAM_SOURCES = {MediaSource.ARCHIVE, MediaSource.PODCAST}
 
 # Formatos que pueden leer los analizadores de visión
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -106,6 +106,7 @@ class MediaDownloader:
     async def _process_stream(self, doc: UnifiedMediaDocument, url: str, folder: Path, idx: int, is_video: bool) -> None:
         t = str(self.max_seconds)
         wav = folder / f"audio_{idx}.wav"
+        logger.info("   ffmpeg: recortando %ss de %s (%s)", t, "vídeo" if is_video else "audio", url)
         if await self._ffmpeg("-t", t, "-i", url, "-vn", "-ac", "1", "-ar", "16000", str(wav)):
             doc.audio_paths.append(str(wav))
         if not is_video:

@@ -18,6 +18,7 @@ os.environ.setdefault("USE_TF", "0")
 
 import asyncio
 import logging
+import time
 from dataclasses import dataclass, field
 from typing import Iterable, List, Optional
 
@@ -59,25 +60,48 @@ async def run_ingestion(
     context: Optional[str] = None,
     pre_limit: int = 20,
     min_score: float = 0.5,
+    min_av: int = 2,
     rerank: bool = True,
     light_models: bool = False,
     download: bool = True,
     media_dir: Optional[str] = None,
     per_source_timeout: float = 60.0,
 ) -> IngestionResult:
+    t = time.perf_counter()
+    logger.info("[1/3] Buscando '%s' en las fuentes (hasta %d candidatos por fuente)...", company, pre_limit)
     found = await FederatedSearchOrchestrator(per_source_timeout=per_source_timeout).gather_all_sources(
         company, pre_limit=pre_limit, sources=sources
     )
+    for r in found.reports:
+        estado = f"{r.n_docs} docs" if r.ok else f"FALLO: {r.error}"
+        logger.info("   %-17s %5.1f s  %s", r.source, r.seconds, estado)
     docs = found.documents
+    logger.info("[1/3] %d candidatos en %.1f s", len(docs), time.perf_counter() - t)
+
+    t = time.perf_counter()
     if rerank:
-        docs = get_reranker(light_models).rerank(
-            company, docs, top_n, query_context=context, min_score=min_score
+        if light_models not in _rerankers:
+            logger.info("[2/3] Cargando modelos del reranker (la primera vez puede tardar minutos)...")
+        reranker = get_reranker(light_models)
+        logger.info("[2/3] Reranking de %d candidatos...", len(docs))
+        docs = reranker.rerank(
+            company, docs, top_n, query_context=context, min_score=min_score, min_av=min_av
         )
     else:
         docs = docs[:top_n]
+    logger.info("[2/3] Top-%d seleccionado en %.1f s:", len(docs), time.perf_counter() - t)
+    for d in docs:
+        score = f"{d.relevance_score:.2f}" if d.relevance_score is not None else " -  "
+        logger.info("   [%s] %-17s %s", score, d.source.value, d.title[:70])
+
     if download and docs:
+        t = time.perf_counter()
+        logger.info("[3/3] Descargando multimedia de %d documentos...", len(docs))
         downloader = MediaDownloader(base_dir=media_dir) if media_dir else MediaDownloader()
         docs = await downloader.download_all(docs)
+        logger.info("[3/3] Descarga terminada en %.1f s: %d imágenes, %d audios, %d vídeos",
+                    time.perf_counter() - t, sum(len(d.image_paths) for d in docs),
+                    sum(len(d.audio_paths) for d in docs), sum(len(d.video_paths) for d in docs))
     return IngestionResult(documents=docs, reports=found.reports)
 
 

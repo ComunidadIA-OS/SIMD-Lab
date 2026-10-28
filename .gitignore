@@ -6,3 +6,4 @@ __pycache__/
 *.tar.gz
 **/data/tmp/
 **/ramdisk/
+**/logs/

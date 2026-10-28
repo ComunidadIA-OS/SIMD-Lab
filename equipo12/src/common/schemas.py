@@ -29,6 +29,8 @@ class MediaSource(str, Enum):
     YOUTUBE = "YouTube"
     GDELT = "GDELT"
     GUARDIAN = "The Guardian"
+    PODCAST = "Podcast Index"
+    FLICKR = "Flickr"
 
 class UnifiedMediaDocument(BaseModel):
     """Documento normalizado que sale de la ingesta (conectores + reranker + descarga).

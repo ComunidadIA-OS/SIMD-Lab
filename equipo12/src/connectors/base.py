@@ -80,7 +80,9 @@ class BaseMediaConnector(ABC):
                 await asyncio.sleep(wait)
             self._last_call = loop.time()
 
-    async def get_json(self, url: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    async def get_json(
+        self, url: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None
+    ) -> Any:
         if self._session is None:
             raise RuntimeError("Usa el conector dentro de 'async with' o pásale una sesión.")
         async for attempt in AsyncRetrying(
@@ -94,7 +96,7 @@ class BaseMediaConnector(ABC):
             with attempt:
                 async with self._semaphore:
                     await self._throttle()
-                    async with self._session.get(url, params=params, timeout=self.timeout) as resp:
+                    async with self._session.get(url, params=params, headers=headers, timeout=self.timeout) as resp:
                         if resp.status == 429 or resp.status >= 500:
                             raise RetryableHTTPError(f"{self.source.value}: HTTP {resp.status}")
                         resp.raise_for_status()

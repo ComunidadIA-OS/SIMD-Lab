@@ -52,7 +52,8 @@ class YouTubeConnector(BaseMediaConnector):
             if max_duration and seconds > max_duration:
                 continue
             thumbs = sn.get("thumbnails", {})
-            thumb = (thumbs.get("high") or thumbs.get("medium") or thumbs.get("default") or {}).get("url")
+            thumb = next((thumbs[k]["url"] for k in ("maxres", "standard", "high", "medium", "default")
+                          if thumbs.get(k, {}).get("url")), None)
             url = f"https://www.youtube.com/watch?v={vid}"
             lic = det.get("status", {}).get("license", "")
             docs.append(UnifiedMediaDocument(
