@@ -27,6 +27,7 @@ class GuardianConnector(BaseMediaConnector):
             fields = item.get("fields", {}) or {}
             url = item.get("webUrl", "")
             thumb = fields.get("thumbnail")
+            main_url, caption = self._main_image(item)
             docs.append(UnifiedMediaDocument(
                 doc_id=self.make_doc_id(self.source, url),
                 source=self.source,
@@ -37,11 +38,23 @@ class GuardianConnector(BaseMediaConnector):
                 language="en",
                 license="Guardian Open Platform (uso no comercial, ver términos)",
                 author=fields.get("byline"),
-                raw_text=fields.get("bodyText") or None,
-                image_urls=[thumb] if thumb else [],
+                raw_text="\n".join(t for t in (caption, fields.get("bodyText")) if t) or None,
+                image_urls=[main_url or thumb] if (main_url or thumb) else [],
                 extra={"section": item.get("sectionId", ""), "guardian_id": item.get("id", "")},
             ))
         return docs
+
+    @staticmethod
+    def _main_image(item: dict):
+        """Imagen principal en su mayor tamaño (1000 px en vez de la miniatura de 500) y su pie de foto."""
+        for el in item.get("elements", []) or []:
+            if el.get("relation") == "main" and el.get("type") == "image":
+                assets = [a for a in el.get("assets", []) if a.get("file")]
+                if not assets:
+                    continue
+                best = max(assets, key=lambda a: int(a.get("typeData", {}).get("width", 0) or 0))
+                return best["file"], best.get("typeData", {}).get("caption")
+        return None, None
 
     async def fetch_news(self, query: str, section: Optional[str], limit: int) -> List[UnifiedMediaDocument]:
         if not self.api_key:
@@ -52,6 +65,7 @@ class GuardianConnector(BaseMediaConnector):
             "page-size": min(limit, 50),
             "order-by": "relevance",
             "show-fields": "headline,byline,bodyText,thumbnail",
+            "show-elements": "image",
             "api-key": self.api_key,
         }
         if section:

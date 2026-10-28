@@ -55,6 +55,8 @@ class InternetArchiveConnector(BaseMediaConnector):
         identifier = doc_meta["identifier"]
         meta = await self.get_json(META_URL.format(identifier=identifier))
         md = meta.get("metadata", {}) or {}
+        if str(md.get("access-restricted-item", "")).lower() == "true":
+            return None
         files = self.pick_files(identifier, meta.get("files", []) or [])
         url = f"https://archive.org/details/{identifier}"
         desc = (self._first(md.get("description")) or "").strip()
@@ -79,7 +81,7 @@ class InternetArchiveConnector(BaseMediaConnector):
     async def fetch_historical_media(self, query: str, mediatype: Sequence[str], limit: int) -> List[UnifiedMediaDocument]:
         mt = " OR ".join(mediatype)
         params = [
-            ("q", f'"{query}" AND mediatype:({mt})'),
+            ("q", f'"{query}" AND mediatype:({mt}) AND -collection:tvarchive AND -access-restricted-item:true'),
             ("fl[]", "identifier"), ("fl[]", "title"), ("fl[]", "mediatype"),
             ("rows", str(limit)), ("output", "json"),
         ]

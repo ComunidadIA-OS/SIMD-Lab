@@ -12,7 +12,6 @@ import os
 import re
 from typing import List, Optional
 import html
-import html
 
 from src.common.schemas import MediaSource, UnifiedMediaDocument
 from src.connectors.base import BaseMediaConnector
@@ -53,7 +52,8 @@ class YouTubeConnector(BaseMediaConnector):
             if max_duration and seconds > max_duration:
                 continue
             thumbs = sn.get("thumbnails", {})
-            thumb = (thumbs.get("high") or thumbs.get("medium") or thumbs.get("default") or {}).get("url")
+            thumb = next((thumbs[k]["url"] for k in ("maxres", "standard", "high", "medium", "default")
+                          if thumbs.get(k, {}).get("url")), None)
             url = f"https://www.youtube.com/watch?v={vid}"
             lic = det.get("status", {}).get("license", "")
             docs.append(UnifiedMediaDocument(
@@ -61,12 +61,12 @@ class YouTubeConnector(BaseMediaConnector):
                 source=self.source,
                 company_query=query,
                 url=url,
-                title=html.unescape(sn.get("title", "")),title=html.unescape(sn.get("title", "")),
+                title=html.unescape(sn.get("title", "")),
                 published_date=sn.get("publishedAt"),
                 language=det.get("snippet", {}).get("defaultAudioLanguage"),
                 license="Creative Commons BY" if lic == "creativeCommon" else "Licencia estándar de YouTube",
                 author=sn.get("channelTitle"),
-                raw_text=html.unescape(det.get("snippet", {}).get("description") or sn.get("description") or "") or None,raw_text=html.unescape(det.get("snippet", {}).get("description") or sn.get("description") or "") or None,
+                raw_text=html.unescape(det.get("snippet", {}).get("description") or sn.get("description") or "") or None,
                 image_urls=[thumb] if thumb else [],
                 extra={"video_id": vid, "duration_s": str(seconds), "license": lic},
             ))

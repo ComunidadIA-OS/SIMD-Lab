@@ -87,16 +87,18 @@ class SemanticReranker:
         balanced: bool = True,
         min_per_source: int = 1,
         min_score: float = 0.0,
+        min_av: int = 0,
     ) -> List[UnifiedMediaDocument]:
         """Top-N por relevance_score. Con balanced=True garantiza una cuota mínima por fuente
-        (solo con documentos que superan min_score), y el resto se rellena por puntuación."""
+        (solo con documentos que superan min_score), y el resto se rellena por puntuación.
+        min_av reserva hasta ese número de huecos a documentos con audio o vídeo."""
         pool = sorted(
             (d for d in docs if (d.relevance_score or 0.0) >= min_score),
             key=lambda d: d.relevance_score or 0.0,
             reverse=True,
         )
         if not balanced:
-            return pool[:n]
+            return SemanticReranker._reserve_av(pool[:n], pool, min_av)
         by_source: Dict[str, List[UnifiedMediaDocument]] = defaultdict(list)
         for d in pool:
             by_source[d.source.value].append(d)
@@ -111,6 +113,21 @@ class SemanticReranker:
             if d.doc_id not in ids:
                 chosen.append(d)
                 ids.add(d.doc_id)
+        return SemanticReranker._reserve_av(chosen, pool, min_av)
+
+    @staticmethod
+    def _reserve_av(
+        chosen: List[UnifiedMediaDocument], pool: List[UnifiedMediaDocument], min_av: int
+    ) -> List[UnifiedMediaDocument]:
+        """Cuota de audio/vídeo: cambia los peores documentos sin audio/vídeo por los mejores que sí tienen."""
+        has_av = lambda d: bool(d.audio_urls or d.video_urls)  # noqa: E731
+        ids = {d.doc_id for d in chosen}
+        extra_av = [d for d in pool if has_av(d) and d.doc_id not in ids]
+        need = min(max(0, min_av - sum(map(has_av, chosen))), len(extra_av))
+        if need:
+            chosen = sorted(chosen, key=lambda d: d.relevance_score or 0.0, reverse=True)
+            out = {d.doc_id for d in [d for d in reversed(chosen) if not has_av(d)][:need]}
+            chosen = [d for d in chosen if d.doc_id not in out] + extra_av[: len(out)]
         return sorted(chosen, key=lambda d: d.relevance_score or 0.0, reverse=True)
 
     def rerank(
@@ -121,10 +138,11 @@ class SemanticReranker:
         query_context: Optional[str] = None,
         balanced: bool = True,
         min_score: float = 0.0,
+        min_av: int = 0,
     ) -> List[UnifiedMediaDocument]:
         """Flujo completo: prefiltro denso -> cross-encoder -> selección Top-N."""
         query = query_context or company
         candidates = self.dense_prefilter(query, docs)
         for d, s in zip(candidates, self.cross_score_relevance(query, candidates)):
             d.relevance_score = float(np.clip(s, 0.0, 1.0))
-        return self.select_top_n(candidates, n, balanced=balanced, min_score=min_score)
+        return self.select_top_n(candidates, n, balanced=balanced, min_score=min_score, min_av=min_av)

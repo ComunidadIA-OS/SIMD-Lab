@@ -19,14 +19,62 @@ def _style_plotly(fig):
     return fig
 
 
-def _safe_mean(df: pd.DataFrame, possible_cols: list[str]) -> float:
-    """Extrae el promedio normalizado (0-100) comprobando los posibles nombres de columna."""
+def _safe_mean(df: pd.DataFrame, possible_cols: list[str]):
+    """Extrae el promedio normalizado (0-100) comprobando los posibles nombres de columna.
+
+    Devuelve None (sin dato) si ningún documento tiene esa métrica: así no se confunde
+    "no se ha podido medir" con "0 %".
+    """
     for col in possible_cols:
         if col in df.columns:
             s = df[col].dropna()
             if not s.empty:
                 return round(float(s.mean()) * 100.0, 1)
-    return 0.0
+    return None
+
+
+def _conteo(df: pd.DataFrame, possible_cols: list[str], escala: float):
+    """Media de un recuento pasada a 0-100 (con tope 100). None si no hay dato."""
+    for col in possible_cols:
+        if col in df.columns:
+            s = df[col].dropna()
+            if not s.empty:
+                return round(min(round(float(s.mean()), 1) * escala, 100.0), 1)
+    return None
+
+
+def _ponderada(pares):
+    """Suma ponderada de las métricas con dato (0-100).
+
+    Las métricas sin dato no cuentan y su peso se reparte entre las demás. Si todas
+    tienen dato, es la suma ponderada de siempre (los pesos suman 1).
+    """
+    validos = [(w, v) for w, v in pares if v is not None]
+    if not validos:
+        return None
+    return round(sum(w * v for w, v in validos) / sum(w for w, _ in validos), 1)
+
+
+def _pct(v) -> str:
+    return "Sin datos" if v is None else f"{v}%"
+
+
+def _v(v):
+    return "s/d" if v is None else v
+
+
+def _prod(w: float, v):
+    return "s/d" if v is None else round(w * v, 2)
+
+
+def _total(v) -> str:
+    return "Sin datos" if v is None else f"{v} / 100"
+
+
+NOTA_SIN_DATO = (
+    '<br><span style="color: #64748B; font-size: 0.78rem;">s/d = sin dato (no se ha podido medir): '
+    "no cuenta y su peso se reparte entre las demás métricas.</span>"
+)
 
 
 @st.fragment
@@ -251,8 +299,8 @@ def _render_interactive_charts(
                         "Tiempo en Pantalla [w=0.35]",
                         "Sincronía Labio-Voz [w=0.20]",
                     ],
-                    "Valor (%)": [v_opt, v_kin, v_sil, v_scr, v_spk],
-                    "TextoBarra": [f"{v_opt}%", f"{v_kin}%", f"{v_sil}%", f"{v_scr}%", f"{v_spk}%"],
+                    "Valor (%)": [0.0 if v is None else v for v in [v_opt, v_kin, v_sil, v_scr, v_spk]],
+                    "TextoBarra": [_pct(v) for v in [v_opt, v_kin, v_sil, v_scr, v_spk]],
                 })
                 fig = px.bar(
                     vid_data,
@@ -267,10 +315,7 @@ def _render_interactive_charts(
                 fig.update_traces(textposition="outside")
                 st.plotly_chart(_style_plotly(fig), use_container_width=True)
 
-                sum_vid = mod.get(
-                    "Vídeo",
-                    round(0.15 * v_opt + 0.15 * v_kin + 0.15 * v_sil + 0.35 * v_scr + 0.20 * v_spk, 1)
-                )
+                sum_vid = mod.get("Vídeo")
 
                 st.markdown("---")
                 st.markdown("##### Fórmula para el cálculo de la puntuación en vídeos")
@@ -279,9 +324,9 @@ def _render_interactive_charts(
                     f"""
                     <div style="background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px 16px; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; color: #1E293B; margin-bottom: 1.5rem;">
                         <strong>Suma de componentes:</strong><br>
-                        <code>(0.35 × {v_scr}) + (0.20 × {v_spk}) + (0.15 × {v_kin}) + (0.15 × {v_sil}) + (0.15 × {v_opt})</code><br>
-                        = <code>{round(0.35*v_scr, 2)} + {round(0.20*v_spk, 2)} + {round(0.15*v_kin, 2)} + {round(0.15*v_sil, 2)} + {round(0.15*v_opt, 2)}</code>
-                        = <strong style="color: #0A365C; font-size: 0.95rem;">{sum_vid} / 100</strong>
+                        <code>(0.35 × {_v(v_scr)}) + (0.20 × {_v(v_spk)}) + (0.15 × {_v(v_kin)}) + (0.15 × {_v(v_sil)}) + (0.15 × {_v(v_opt)})</code><br>
+                        = <code>{_prod(0.35, v_scr)} + {_prod(0.20, v_spk)} + {_prod(0.15, v_kin)} + {_prod(0.15, v_sil)} + {_prod(0.15, v_opt)}</code>
+                        = <strong style="color: #0A365C; font-size: 0.95rem;">{_total(sum_vid)}</strong>{NOTA_SIN_DATO}
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -300,9 +345,7 @@ def _render_interactive_charts(
                 i_cen = _safe_mean(df, ["img_spatial_centrality_score", "spatial_centrality_score"])
                 i_ldr = _safe_mean(df, ["img_leadership_visual_context", "leadership_visual_context"])
 
-                cnt_col = next((c for c in ["img_cross_image_appearance_count", "cross_image_appearance_count"] if c in df.columns), None)
-                cnt_raw = round(float(df[cnt_col].dropna().mean()), 1) if cnt_col else 0.0
-                i_cnt = round(min(cnt_raw * 10.0, 100.0), 1)
+                i_cnt = _conteo(df, ["img_cross_image_appearance_count", "cross_image_appearance_count"], 10.0)
 
                 img_data = pd.DataFrame({
                     "Métrica": [
@@ -316,8 +359,8 @@ def _render_interactive_charts(
                         "Contexto de Liderazgo [w=0.14]",
                         "Aparición en Galería [w=0.10]",
                     ],
-                    "Valor (%)": [i_gen, i_scl, i_ang, i_thd, i_shd, i_per, i_cen, i_ldr, i_cnt],
-                    "TextoBarra": [f"{i_gen}%", f"{i_scl}%", f"{i_ang}%", f"{i_thd}%", f"{i_shd}%", f"{i_per}%", f"{i_cen}%", f"{i_ldr}%", f"{i_cnt}%"],
+                    "Valor (%)": [0.0 if v is None else v for v in [i_gen, i_scl, i_ang, i_thd, i_shd, i_per, i_cen, i_ldr, i_cnt]],
+                    "TextoBarra": [_pct(v) for v in [i_gen, i_scl, i_ang, i_thd, i_shd, i_per, i_cen, i_ldr, i_cnt]],
                 })
                 fig = px.bar(
                     img_data,
@@ -332,13 +375,7 @@ def _render_interactive_charts(
                 fig.update_traces(textposition="outside")
                 st.plotly_chart(_style_plotly(fig), use_container_width=True)
 
-                sum_img = mod.get(
-                    "Imagen",
-                    round(
-                        0.20 * i_gen + 0.10 * i_scl + 0.10 * i_ang + 0.08 * i_thd + 0.08 * i_shd
-                        + 0.10 * i_per + 0.10 * i_cen + 0.14 * i_ldr + 0.10 * i_cnt, 1
-                    )
-                )
+                sum_img = mod.get("Imagen")
 
                 st.markdown("---")
                 st.markdown("##### Fórmula para el cálculo de la puntuación en imágenes")
@@ -347,8 +384,8 @@ def _render_interactive_charts(
                     f"""
                     <div style="background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px 16px; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; color: #1E293B; margin-bottom: 1.5rem;">
                         <strong>Suma de componentes:</strong><br>
-                        <code>(0.20 × {i_gen}) + (0.14 × {i_ldr}) + 0.10 × ({i_scl} + {i_ang} + {i_per} + {i_cen} + {i_cnt}) + 0.08 × ({i_thd} + {i_shd})</code><br>
-                        = <strong style="color: #0A365C; font-size: 0.95rem;">{sum_img} / 100</strong>
+                        <code>(0.20 × {_v(i_gen)}) + (0.14 × {_v(i_ldr)}) + 0.10 × ({_v(i_scl)} + {_v(i_ang)} + {_v(i_per)} + {_v(i_cen)} + {_v(i_cnt)}) + 0.08 × ({_v(i_thd)} + {_v(i_shd)})</code><br>
+                        = <strong style="color: #0A365C; font-size: 0.95rem;">{_total(sum_img)}</strong>{NOTA_SIN_DATO}
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -368,9 +405,7 @@ def _render_interactive_charts(
                 t_exp = _safe_mean(df, ["txt_expert_quote_ratio", "expert_quote_ratio"])
                 t_hed = _safe_mean(df, ["txt_headline_presence", "headline_presence"])
 
-                cnt_col = next((c for c in ["txt_female_mention_frequency", "female_mention_frequency"] if c in df.columns), None)
-                cnt_txt_raw = round(float(df[cnt_col].dropna().mean()), 1) if cnt_col else 0.0
-                t_cnt = round(min((cnt_txt_raw / 15.0) * 100.0, 100.0), 1)
+                t_cnt = _conteo(df, ["txt_female_mention_frequency", "female_mention_frequency"], 100.0 / 15.0)
 
                 txt_data = pd.DataFrame({
                     "Métrica": [
@@ -385,8 +420,8 @@ def _render_interactive_charts(
                         "Presencia en Titular [w=0.07]",
                         "Frecuencia Absoluta [w=0.08]",
                     ],
-                    "Valor (%)": [t_fem, t_mal, t_neu, t_div, t_suf, t_frq, t_agn, t_exp, t_hed, t_cnt],
-                    "TextoBarra": [f"{t_fem}%", f"{t_mal}%", f"{t_neu}%", f"{t_div}%", f"{t_suf}%", f"{t_frq}%", f"{t_agn}%", f"{t_exp}%", f"{t_hed}%", f"{t_cnt}%"],
+                    "Valor (%)": [0.0 if v is None else v for v in [t_fem, t_mal, t_neu, t_div, t_suf, t_frq, t_agn, t_exp, t_hed, t_cnt]],
+                    "TextoBarra": [_pct(v) for v in [t_fem, t_mal, t_neu, t_div, t_suf, t_frq, t_agn, t_exp, t_hed, t_cnt]],
                 })
                 fig = px.bar(
                     txt_data,
@@ -401,13 +436,7 @@ def _render_interactive_charts(
                 fig.update_traces(textposition="outside")
                 st.plotly_chart(_style_plotly(fig), use_container_width=True)
 
-                sum_txt = mod.get(
-                    "Texto",
-                    round(
-                        0.18 * t_fem + 0.04 * t_mal + 0.06 * t_neu + 0.08 * t_div + 0.08 * t_suf
-                        + 0.10 * t_frq + 0.16 * t_agn + 0.15 * t_exp + 0.07 * t_hed + 0.08 * t_cnt, 1
-                    )
-                )
+                sum_txt = mod.get("Texto")
 
                 st.markdown("---")
                 st.markdown("##### Fórmula para el cálculo de la puntuación en textos")
@@ -416,8 +445,8 @@ def _render_interactive_charts(
                     f"""
                     <div style="background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px 16px; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; color: #1E293B; margin-bottom: 1.5rem;">
                         <strong>Suma de componentes:</strong><br>
-                        <code>(0.18 × {t_fem}) + (0.16 × {t_agn}) + (0.15 × {t_exp}) + (0.10 × {t_frq}) + 0.08 × ({t_div} + {t_suf} + {t_cnt}) + (0.07 × {t_hed}) + (0.06 × {t_neu}) + (0.04 × {t_mal})</code><br>
-                        = <strong style="color: #0A365C; font-size: 0.95rem;">{sum_txt} / 100</strong>
+                        <code>(0.18 × {_v(t_fem)}) + (0.16 × {_v(t_agn)}) + (0.15 × {_v(t_exp)}) + (0.10 × {_v(t_frq)}) + 0.08 × ({_v(t_div)} + {_v(t_suf)} + {_v(t_cnt)}) + (0.07 × {_v(t_hed)}) + (0.06 × {_v(t_neu)}) + (0.04 × {_v(t_mal)})</code><br>
+                        = <strong style="color: #0A365C; font-size: 0.95rem;">{_total(sum_txt)}</strong>{NOTA_SIN_DATO}
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -435,9 +464,7 @@ def _render_interactive_charts(
                 a_cnd = _safe_mean(df, ["aud_acoustic_gender_confidence", "acoustic_gender_confidence"])
                 a_noi = _safe_mean(df, ["aud_no_interruption_score", "no_interruption_score"])
 
-                cnt_col = next((c for c in ["aud_female_turn_count", "female_turn_count"] if c in df.columns), None)
-                cnt_aud_raw = round(float(df[cnt_col].dropna().mean()), 1) if cnt_col else 0.0
-                a_cnt = round(min((cnt_aud_raw / 10.0) * 100.0, 100.0), 1)
+                a_cnt = _conteo(df, ["aud_female_turn_count", "female_turn_count"], 10.0)
 
                 aud_data = pd.DataFrame({
                     "Métrica": [
@@ -450,8 +477,8 @@ def _render_interactive_charts(
                         "Ausencia de Interrupciones [w=0.10]",
                         "Volumen de Intervenciones [w=0.10]",
                     ],
-                    "Valor (%)": [a_opn, a_mid, a_cls, a_tim, a_trn, a_cnd, a_noi, a_cnt],
-                    "TextoBarra": [f"{a_opn}%", f"{a_mid}%", f"{a_cls}%", f"{a_tim}%", f"{a_trn}%", f"{a_cnd}%", f"{a_noi}%", f"{a_cnt}%"],
+                    "Valor (%)": [0.0 if v is None else v for v in [a_opn, a_mid, a_cls, a_tim, a_trn, a_cnd, a_noi, a_cnt]],
+                    "TextoBarra": [_pct(v) for v in [a_opn, a_mid, a_cls, a_tim, a_trn, a_cnd, a_noi, a_cnt]],
                 })
                 fig = px.bar(
                     aud_data,
@@ -466,13 +493,7 @@ def _render_interactive_charts(
                 fig.update_traces(textposition="outside")
                 st.plotly_chart(_style_plotly(fig), use_container_width=True)
 
-                sum_aud = mod.get(
-                    "Audio",
-                    round(
-                        0.10 * a_opn + 0.12 * a_mid + 0.10 * a_cls + 0.25 * a_tim
-                        + 0.15 * a_trn + 0.08 * a_cnd + 0.10 * a_noi + 0.10 * a_cnt, 1
-                    )
-                )
+                sum_aud = mod.get("Audio")
 
                 st.markdown("---")
                 st.markdown("##### Fórmula para el cálculo de la puntuación en audios")
@@ -481,15 +502,15 @@ def _render_interactive_charts(
                     f"""
                     <div style="background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 12px 16px; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; color: #1E293B; margin-bottom: 1.5rem;">
                         <strong>Suma de componentes:</strong><br>
-                        <code>(0.25 × {a_tim}) + (0.15 × {a_trn}) + (0.12 × {a_mid}) + 0.10 × ({a_opn} + {a_cls} + {a_noi} + {a_cnt}) + (0.08 × {a_cnd})</code><br>
-                        = <strong style="color: #0A365C; font-size: 0.95rem;">{sum_aud} / 100</strong>
+                        <code>(0.25 × {_v(a_tim)}) + (0.15 × {_v(a_trn)}) + (0.12 × {_v(a_mid)}) + 0.10 × ({_v(a_opn)} + {_v(a_cls)} + {_v(a_noi)} + {_v(a_cnt)}) + (0.08 × {_v(a_cnd)})</code><br>
+                        = <strong style="color: #0A365C; font-size: 0.95rem;">{_total(sum_aud)}</strong>{NOTA_SIN_DATO}
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
 
 
-def render_esg_dashboard(company: str, score_data: dict):
+def render_esg_dashboard(company: str, score_data: dict, perfil_lexico: dict = None):
     st.subheader(f"Ponderación Multimodal de Métricas: {company}")
     df = score_data.get("dataframe", pd.DataFrame())
 
@@ -540,15 +561,20 @@ def render_esg_dashboard(company: str, score_data: dict):
     t_agn = _safe_mean(df, ["txt_syntactic_agency_ratio", "syntactic_agency_ratio"])
     t_exp = _safe_mean(df, ["txt_expert_quote_ratio", "expert_quote_ratio"])
     t_hed = _safe_mean(df, ["txt_headline_presence", "headline_presence"])
-    cnt_txt_col = next((c for c in ["txt_female_mention_frequency", "female_mention_frequency"] if c in df.columns), None)
-    cnt_txt_raw = round(float(df[cnt_txt_col].dropna().mean()), 1) if cnt_txt_col else 0.0
-    t_cnt = round(min((cnt_txt_raw / 15.0) * 100.0, 100.0), 1)
+    t_cnt = _conteo(df, ["txt_female_mention_frequency", "female_mention_frequency"], 100.0 / 15.0)
 
-    mod["Texto"] = round(
-        0.18 * t_fem + 0.04 * t_mal + 0.06 * t_neu + 0.08 * t_div + 0.08 * t_suf
-        + 0.10 * t_frq + 0.16 * t_agn + 0.15 * t_exp + 0.07 * t_hed + 0.08 * t_cnt,
-        1,
-    )
+    mod["Texto"] = _ponderada([
+        (0.18, t_fem),
+        (0.04, t_mal),
+        (0.06, t_neu),
+        (0.08, t_div),
+        (0.08, t_suf),
+        (0.10, t_frq),
+        (0.16, t_agn),
+        (0.15, t_exp),
+        (0.07, t_hed),
+        (0.08, t_cnt),
+    ])
 
     a_opn = _safe_mean(df, ["aud_female_opened_score", "female_opened_score"])
     a_mid = _safe_mean(df, ["aud_middle_segment_female_ratio", "middle_segment_female_ratio"])
@@ -557,15 +583,18 @@ def render_esg_dashboard(company: str, score_data: dict):
     a_trn = _safe_mean(df, ["aud_speaking_turns_ratio", "speaking_turns_ratio"])
     a_cnd = _safe_mean(df, ["aud_acoustic_gender_confidence", "acoustic_gender_confidence"])
     a_noi = _safe_mean(df, ["aud_no_interruption_score", "no_interruption_score"])
-    cnt_aud_col = next((c for c in ["aud_female_turn_count", "female_turn_count"] if c in df.columns), None)
-    cnt_aud_raw = round(float(df[cnt_aud_col].dropna().mean()), 1) if cnt_aud_col else 0.0
-    a_cnt = round(min((cnt_aud_raw / 10.0) * 100.0, 100.0), 1)
+    a_cnt = _conteo(df, ["aud_female_turn_count", "female_turn_count"], 10.0)
 
-    mod["Audio"] = round(
-        0.10 * a_opn + 0.12 * a_mid + 0.10 * a_cls + 0.25 * a_tim
-        + 0.15 * a_trn + 0.08 * a_cnd + 0.10 * a_noi + 0.10 * a_cnt,
-        1,
-    )
+    mod["Audio"] = _ponderada([
+        (0.10, a_opn),
+        (0.12, a_mid),
+        (0.10, a_cls),
+        (0.25, a_tim),
+        (0.15, a_trn),
+        (0.08, a_cnd),
+        (0.10, a_noi),
+        (0.10, a_cnt),
+    ])
 
     i_gen = _safe_mean(df, ["img_visual_gender_female_ratio", "visual_gender_female_ratio"])
     i_scl = _safe_mean(df, ["img_shot_scale_importance_score", "shot_scale_importance_score"])
@@ -575,15 +604,19 @@ def render_esg_dashboard(company: str, score_data: dict):
     i_per = _safe_mean(df, ["img_cross_image_persistence_ratio", "cross_image_persistence_ratio"])
     i_cen = _safe_mean(df, ["img_spatial_centrality_score", "spatial_centrality_score"])
     i_ldr = _safe_mean(df, ["img_leadership_visual_context", "leadership_visual_context"])
-    cnt_img_col = next((c for c in ["img_cross_image_appearance_count", "cross_image_appearance_count"] if c in df.columns), None)
-    cnt_img_raw = round(float(df[cnt_img_col].dropna().mean()), 1) if cnt_img_col else 0.0
-    i_cnt = round(min(cnt_img_raw * 10.0, 100.0), 1)
+    i_cnt = _conteo(df, ["img_cross_image_appearance_count", "cross_image_appearance_count"], 10.0)
 
-    mod["Imagen"] = round(
-        0.20 * i_gen + 0.10 * i_scl + 0.10 * i_ang + 0.08 * i_thd + 0.08 * i_shd
-        + 0.10 * i_per + 0.10 * i_cen + 0.14 * i_ldr + 0.10 * i_cnt,
-        1,
-    )
+    mod["Imagen"] = _ponderada([
+        (0.20, i_gen),
+        (0.10, i_scl),
+        (0.10, i_ang),
+        (0.08, i_thd),
+        (0.08, i_shd),
+        (0.10, i_per),
+        (0.10, i_cen),
+        (0.14, i_ldr),
+        (0.10, i_cnt),
+    ])
 
     v_opt = _safe_mean(df, ["vid_optical_flow_motion_score", "optical_flow_motion_score"])
     v_kin = _safe_mean(df, ["vid_kinetic_dominance_ratio", "kinetic_dominance_ratio"])
@@ -591,10 +624,13 @@ def render_esg_dashboard(company: str, score_data: dict):
     v_scr = _safe_mean(df, ["vid_female_screen_time_ratio", "female_screen_time_ratio"])
     v_spk = _safe_mean(df, ["vid_active_speaker_sync_score", "active_speaker_sync_score"])
 
-    mod["Vídeo"] = round(
-        0.15 * v_opt + 0.15 * v_kin + 0.15 * v_sil + 0.35 * v_scr + 0.20 * v_spk,
-        1,
-    )
+    mod["Vídeo"] = _ponderada([
+        (0.15, v_opt),
+        (0.15, v_kin),
+        (0.15, v_sil),
+        (0.35, v_scr),
+        (0.20, v_spk),
+    ])
 
     # 3. Pesos normalizados de cada canal
     weights = score_data.get("modality_weights")
@@ -634,10 +670,10 @@ def render_esg_dashboard(company: str, score_data: dict):
         )
 
     modalities = [
-        ("Texto", mod.get("Texto", 0.0)),
-        ("Audio", mod.get("Audio", 0.0)),
-        ("Imagen", mod.get("Imagen", 0.0)),
-        ("Vídeo", mod.get("Vídeo", 0.0)),
+        ("Texto", mod.get("Texto")),
+        ("Audio", mod.get("Audio")),
+        ("Imagen", mod.get("Imagen")),
+        ("Vídeo", mod.get("Vídeo")),
     ]
 
     arrow_cols = st.columns(4)
@@ -658,6 +694,10 @@ def render_esg_dashboard(company: str, score_data: dict):
 
     card_cols = st.columns(4)
     for col, (name, val) in zip(card_cols, modalities):
+        if val is None or pd.isna(val):
+            val_html = "Sin datos"
+        else:
+            val_html = f'{val} <span style="font-size: 0.85rem; color: #94A3B8; font-weight: 400;">/ 100</span>'
         with col:
             st.markdown(
                 f"""
@@ -666,7 +706,7 @@ def render_esg_dashboard(company: str, score_data: dict):
                         Score {name}
                     </div>
                     <div style="font-family: 'Merriweather', serif; font-size: 1.35rem; font-weight: 700; color: #0F172A; margin-top: 4px;">
-                        {val} <span style="font-size: 0.85rem; color: #94A3B8; font-weight: 400;">/ 100</span>
+                        {val_html}
                     </div>
                 </div>
                 """,
@@ -675,3 +715,43 @@ def render_esg_dashboard(company: str, score_data: dict):
 
     st.markdown("<br>", unsafe_allow_html=True)
     _render_interactive_charts(company, score_data, df, df_calc, weights)
+    _render_vocabulario(perfil_lexico)
+
+
+def _render_vocabulario(perfil: dict) -> None:
+    """Palabras más asociadas a las frases sobre mujeres y sobre hombres (log-odds, z)."""
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("#### Vocabulario asociado a mujeres y a hombres")
+        if not perfil:
+            st.info("No se ha podido calcular el vocabulario (hace falta el modelo de spaCy).")
+            return
+        n_f, n_m = perfil.get("frases_mujeres", 0), perfil.get("frases_hombres", 0)
+        origen = ("las frases de ejemplo guardadas" if perfil.get("solo_frases_de_ejemplo")
+                  else f"el texto completo de {perfil.get('textos', 0)} documentos")
+        st.caption(
+            f"De qué se habla en las {n_f} frases sobre mujeres frente a las {n_m} frases sobre hombres "
+            f"({origen}). Puntuación z del log-odds ratio con prior de Dirichlet (Monroe et al., 2008): "
+            "|z| > 1,96 es una diferencia significativa al 95 %. No se cuentan nombres, cargos, pronombres "
+            "ni el nombre de la empresa."
+        )
+        filas = perfil.get("mujeres", [])[:10] + perfil.get("hombres", [])[:10]
+        if not filas or min(n_f, n_m) == 0:
+            st.info("No hay frases suficientes sobre mujeres y sobre hombres para comparar su vocabulario.")
+            return
+        datos = pd.DataFrame(filas).sort_values("z")
+        fig = go.Figure(go.Bar(
+            x=datos["z"], y=datos["lema"], orientation="h",
+            marker_color=["#C2185B" if z > 0 else "#1565C0" for z in datos["z"]],
+            customdata=datos[["frases_mujeres", "frases_hombres"]],
+            hovertemplate="%{y}: z = %{x}<br>frases sobre mujeres: %{customdata[0]}"
+                          "<br>frases sobre hombres: %{customdata[1]}<extra></extra>",
+        ))
+        for x in (-1.96, 1.96):
+            fig.add_vline(x=x, line=dict(color="#94A3B8", dash="dot"))
+        fig = _style_plotly(fig)
+        fig.update_layout(height=140 + 26 * len(datos),
+                          xaxis_title="← más en frases sobre hombres · z · más en frases sobre mujeres →")
+        st.plotly_chart(fig, width="stretch")
+        if datos["z"].abs().max() < 1.96:
+            st.caption("Ninguna diferencia es significativa todavía: con más documentos el resultado será más fiable.")

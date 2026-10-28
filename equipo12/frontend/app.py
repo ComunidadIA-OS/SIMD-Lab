@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-from src.api.main_controller import fetch_analyzed_documents
+from src.api.main_controller import fetch_analyzed_documents, get_lexical_profile
 from src.explainability.scoring_model import CorporateGenderScorer
 from frontend.components.search_sidebar import render_sidebar
 from frontend.components.tab_esg_dashboard import render_esg_dashboard
@@ -305,10 +305,9 @@ def get_cached_documents(_test_ui: bool, company_name: str, n_docs: int, sources
     else:
         try:
             return fetch_analyzed_documents(company_name, n_docs, list(sources_tuple))
-        except Exception:
-            from tests.test_xai_fairness_mock import generate_mock_dataset
-            return generate_mock_dataset(company=company_name)
-
+        except Exception as exc:
+            st.error(f"Fallo en el pipeline real: {type(exc).__name__}: {exc}")
+            st.stop()
 
 @st.cache_data(show_spinner=False)
 def compute_cached_scores(_scorer, docs_payload):
@@ -325,6 +324,7 @@ if run_btn:
         st.session_state.docs = docs_computed
         st.session_state.score_data = score_data_computed
         st.session_state.active_company = company
+        st.session_state.perfil_lexico = get_lexical_profile(company, top_n, selected_sources, docs_computed)
         st.session_state.audit_executed = True
 
 # 4. Renderizado condicional
@@ -336,7 +336,8 @@ if st.session_state.audit_executed:
     ])
 
     with tab1:
-        render_esg_dashboard(st.session_state.active_company, st.session_state.score_data)
+        render_esg_dashboard(st.session_state.active_company, st.session_state.score_data,
+                             st.session_state.get("perfil_lexico"))
     with tab2:
         render_xai_tab(st.session_state.docs, st.session_state.score_data, scorer)
     with tab3:
@@ -353,4 +354,4 @@ else:
         </div>
         """,
         unsafe_allow_html=True
-    )
+    )

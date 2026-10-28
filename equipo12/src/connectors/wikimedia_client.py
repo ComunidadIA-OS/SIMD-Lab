@@ -35,7 +35,8 @@ class WikimediaConnector(BaseMediaConnector):
         data = await self.get_json(
             self._api(lang),
             {"action": "query", "pageids": pageid,
-             "prop": "extracts|pageimages|info|revisions",
+             "prop": "extracts|pageimages|info|revisions|pageprops",
+             "ppprop": "wikibase_item",
              "explaintext": 1, "piprop": "original", "inprop": "url",
              "rvprop": "timestamp", "format": "json", "formatversion": 2},
         )
@@ -57,7 +58,8 @@ class WikimediaConnector(BaseMediaConnector):
             license="CC BY-SA 4.0 (texto de Wikipedia)",
             raw_text=p.get("extract") or None,
             image_urls=[image] if image else [],
-            extra={"pageid": str(pageid)},
+            extra={"pageid": str(pageid),
+                   "wikidata": (p.get("pageprops") or {}).get("wikibase_item", "")},
         )
 
     async def search_articles_and_commons(self, query: str, limit: int) -> List[UnifiedMediaDocument]:
@@ -73,8 +75,17 @@ class WikimediaConnector(BaseMediaConnector):
                 continue
             tasks += [self._page(lang, pid, query) for pid in ids]
         results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Filtrar los resultados que son documentos de medios unificados
         docs = [r for r in results if isinstance(r, UnifiedMediaDocument)]
-        return docs[:limit]
+        # La misma entidad en es.wikipedia y en.wikipedia comparte id de Wikidata:
+        # nos quedamos con la primera (el orden de self.languages da prioridad al español)
+        seen, unique = set(), []
+        for d in docs:
+            key = d.extra.get("wikidata") or d.url
+            if key not in seen:
+                seen.add(key)
+                unique.append(d)
+        return unique[:limit]
 
     async def fetch_top_candidates(self, query: str, limit: int) -> List[UnifiedMediaDocument]:
         return await self.search_articles_and_commons(query, limit)

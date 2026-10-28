@@ -1,0 +1,12 @@
+services:
+  ingesta:
+    build:
+      context: .
+      dockerfile: infra_uhccloud/Dockerfile.ingesta
+    env_file: .env
+    tmpfs:
+      - /tmp/ramdisk:size=2g   # multimedia en memoria: se borra al parar
+    volumes:
+      - ./tests/mocks:/app/tests/mocks   # el JSON del Contrato A queda en tu carpeta
+    command: ["python", "tests/test_ingesta_rerank.py",
+              "--query", "Iberdrola", "--n", "10", "--no-download"]

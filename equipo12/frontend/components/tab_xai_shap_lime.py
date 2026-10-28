@@ -6,6 +6,26 @@ import streamlit as st
 
 from src.explainability.lime_explainer import LimeMultimodalEngine
 from src.explainability.shap_explainer import ShapExplanationEngine
+from src.explainability.text_evidence import explain_text
+
+
+def _fmt(v, pct: bool = False) -> str:
+    """Formatea una métrica; "sin dato" si el analizador no la ha podido calcular (None)."""
+    if v is None:
+        return "sin dato"
+    return f"{v * 100:.1f}%" if pct else f"{v:.2f}"
+
+
+@st.cache_resource(show_spinner="Cargando el analizador de texto…")
+def _analizador_texto():
+    """El mismo analizador de texto que usa la auditoría (spaCy), cargado una sola vez."""
+    from src.api.main_controller import _get_pipeline
+    return _get_pipeline().texto
+
+
+@st.cache_data(show_spinner="Buscando menciones a personas…", max_entries=64)
+def _menciones_html(texto: str, empresa: str) -> str:
+    return explain_text(texto, _analizador_texto(), company_query=empresa)
 
 
 def _extract_doc_texts(doc) -> list:
@@ -172,7 +192,7 @@ def render_xai_tab(docs, score_data, scorer):
                 # Métodos interpretativos disponibles
                 method_options = ["SHAP Waterfall (Atribución Local)"]
                 if selected_modality == "Texto" and len(doc_texts) > 0:
-                    method_options.append("LIME Texto (Raíces y Términos)")
+                    method_options.append("Menciones detectadas en el texto")
                 elif selected_modality == "Imagen" and len(doc_images) > 0:
                     method_options.append("LIME Imagen (Superpíxeles)")
 
@@ -182,12 +202,12 @@ def render_xai_tab(docs, score_data, scorer):
                     key="xai_local_method",
                 )
 
-                # Selectores de sub-muestra exclusivos para LIME
-                if selected_method.startswith("LIME"):
+                # Selectores de sub-muestra (fragmento de texto o fotografía)
+                if selected_method.startswith(("LIME", "Menciones")):
                     st.divider()
                     if selected_modality == "Texto" and len(doc_texts) > 0:
                         selected_txt_idx = st.selectbox(
-                            "Fragmento específico para LIME:",
+                            "Fragmento de texto:",
                             options=list(range(len(doc_texts))),
                             format_func=lambda i: f"Texto {i+1}: {getattr(doc_texts[i], 'text', str(doc_texts[i]))[:30]}...",
                             key="xai_lime_txt_subidx",
@@ -280,10 +300,10 @@ def render_xai_tab(docs, score_data, scorer):
                         with col_aud_metrics:
                             st.markdown("**Métricas Acústicas Extraídas:**")
                             if sample_metrics:
-                                st.write(f"- **Ratio Tiempo Hablado:** `{getattr(sample_metrics, 'female_speaking_time_ratio', 0.0)*100:.1f}%`")
+                                st.write(f"- **Ratio Tiempo Hablado:** `{_fmt(getattr(sample_metrics, 'female_speaking_time_ratio', None), pct=True)}`")
                                 st.write(f"- **Turnos de Habla:** `{getattr(sample_metrics, 'female_turn_count', 0)}`")
                                 st.write(f"- **Apertura Femenina:** `{getattr(sample_metrics, 'female_opened_score', 0.0):.2f}`")
-                                st.write(f"- **Ausencia de Interrupciones:** `{getattr(sample_metrics, 'no_interruption_score', 0.0):.2f}`")
+                                st.write(f"- **Ausencia de Interrupciones:** `{_fmt(getattr(sample_metrics, 'no_interruption_score', None))}`")
 
                     elif selected_modality == "Vídeo":
                         st.divider()
@@ -312,17 +332,23 @@ def render_xai_tab(docs, score_data, scorer):
                             st.markdown("**Tensores Cinematográficos Extraídos:**")
                             if vm:
                                 st.write(f"- **Presencia en Pantalla:** `{getattr(vm, 'female_screen_time_ratio', 0.0)*100:.1f}%`")
-                                st.write(f"- **Flujo Óptico (Movimiento):** `{getattr(vm, 'optical_flow_motion_score', 0.0):.2f}`")
-                                st.write(f"- **Dominancia Cinética:** `{getattr(vm, 'kinetic_dominance_ratio', 0.0):.2f}`")
-                                st.write(f"- **Sincronía Labio-Voz:** `{getattr(vm, 'active_speaker_sync_score', 0.0):.2f}`")
+                                st.write(f"- **Flujo Óptico (Movimiento):** `{_fmt(getattr(vm, 'optical_flow_motion_score', None))}`")
+                                st.write(f"- **Dominancia Cinética:** `{_fmt(getattr(vm, 'kinetic_dominance_ratio', None))}`")
+                                st.write(f"- **Sincronía Labio-Voz:** `{_fmt(getattr(vm, 'active_speaker_sync_score', None))}`")
 
-                elif selected_method.startswith("LIME Texto"):
+                elif selected_method.startswith("Menciones"):
                     target_txt_sample = doc_texts[selected_txt_idx] if doc_texts else ""
                     target_text = getattr(target_txt_sample, "text", str(target_txt_sample))
                     if target_text:
-                        st.caption("Términos activos y raíces que condicionaron el clasificador subrogado de texto:")
-                        html_lime = lime_engine.explain_text_instance(target_text)
-                        st.html(html_lime)
+                        st.caption(
+                            "Personas que el analizador de texto ha encontrado en este fragmento (nombres, cargos y "
+                            "pronombres), con su género y si son sujeto de la acción o están citadas. Las métricas "
+                            "de texto se calculan solo con estas menciones."
+                        )
+                        try:
+                            st.html(_menciones_html(target_text, getattr(curr_doc, "company_query", "") or ""))
+                        except Exception as e:
+                            st.error(f"No se ha podido analizar el fragmento: {e}")
                     else:
                         st.info("El documento no contiene fragmentos textuales para auditar.")
 
@@ -347,4 +373,4 @@ def render_xai_tab(docs, score_data, scorer):
                         except Exception as e:
                             st.error(f"Error procesando la muestra visual: {e}")
                     else:
-                        st.info("No existen muestras de imagen disponibles para auditar con LIME.")
+                        st.info("No existen muestras de imagen disponibles para auditar con LIME.")

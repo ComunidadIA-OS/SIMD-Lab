@@ -22,7 +22,7 @@ from typing import List, Optional
 
 from src.common.schemas import AudioMetrics, GenderTarget
 
-NEUTRO = 0.5               
+NEUTRO = None   # una proporción que no se puede calcular queda sin dato
 PAUSA_MISMO_TURNO = 1.0    # si la misma voz para menos segundos que esto, sigue siendo su turno 
 PAUSA_INTERRUPCION = 0.1   # si entra otra voz antes de esto, cuenta como corte (segundos)
 TURNO_ESTABLE = 1.0        # los turnos más cortos son menos fiables (segundos)
@@ -53,7 +53,7 @@ class AudioResult:
     music_noise_ratio: float  # parte del audio con música o ruido 
 
 
-def _ratio(parte: float, total: float) -> float:
+def _ratio(parte: float, total: float) -> Optional[float]:
     return round(parte / total, 4) if total > 0 else NEUTRO
 
 

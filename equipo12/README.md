@@ -9,16 +9,35 @@ source .venv/bin/activate
 
 pip install -r equipo12/requirements/requirements.txt
 
-pip install inaSpeechSegmenter==0.8.0 --no-deps 
+pip install inaSpeechSegmenter==0.8.0 --no-deps
+
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 
 python -m spacy download es_core_news_md
 
 python -m spacy download en_core_web_md
 
-Pasos para probar el generador Mock, LightGBM y Fairlearn y construir la imagen docker:
+conda install --override-channels -c conda-forge ffmpeg
+
+(torch se reinstala con CUDA 12.6 porque la versión por defecto no funciona en la GPU Tesla V100; ffmpeg sirve para recortar el audio y el vídeo que se descargan.)
+
+Pasos para configurar las claves de las APIs:
 
 cd equipo12
-PYTHONPATH=. python tests/test_xai_fairness_mock.py
 
+cp .env.example .env
 
-Si esto funciona, ejecuta ya todas las celdas de la libreta de jupyter my_app.ipynb.
+Rellena en el .env las claves de The Guardian, YouTube y Podcast Index. Si falta alguna, esa fuente se omite y el resto funciona igual.
+
+Pasos para probar la ingesta y los analizadores:
+
+PYTHONPATH=. python -m pytest tests/test_ingesta.py tests/test_analyzers_unit.py tests/test_vocabulario.py -q
+
+Si esto funciona, ejecuta ya todas las celdas de la libreta de jupyter my_app.ipynb. Antes de hacerlo:
+
+- En la tercera celda elige AUDIT_DATA_MODE: "test_ui" (datos de prueba) o "real" (busca y analiza la empresa; tarda varios minutos).
+- En la última celda cambia ids por el identificador de tu notebook (aparece en su URL).
+
+Para seguir el progreso de la auditoría desde una terminal (en la carpeta equipo12):
+
+tail -f logs/auditoria.log

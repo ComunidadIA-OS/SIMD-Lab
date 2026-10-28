@@ -20,7 +20,7 @@ import numpy as np
 from src.common.schemas import TextMetrics, TextSample
 
 F, M = "F", "M"   # así se escribe mujer (F) y hombre (M) en todo el archivo
-NEUTRO = 0.5      # valor de una proporción que no se puede calcular 
+NEUTRO = None     # una proporción que no se puede calcular (p. ej. nadie citado) queda sin dato
 MAX_CHARS = 40000  # los artículos muy largos se recortan para evitar tiempos de análisis excesivos
 
 # Cargos y palabras de persona por parejas (masculino/femenino)
@@ -123,7 +123,7 @@ class TextResult:
 
 
 
-def _ratio(parte: float, total: float) -> float:
+def _ratio(parte: float, total: float) -> Optional[float]:
     return round(parte / total, 4) if total > 0 else NEUTRO
 
 
@@ -383,7 +383,8 @@ class TextGenderAnalyzer:
             self.analyze_syntactic_agency(doc, mentions)
             self.measure_expert_quotes(doc, mentions, lang)
             tm = compute_text_metrics(mentions, roles, range(len(list(doc.sents))), False)
-            p = 0.05 if tm is None else float(np.mean([tm.relative_frequency_score, tm.syntactic_agency_ratio,
-                                                        tm.expert_quote_ratio, tm.sentence_female_ratio]))
+            valores = [] if tm is None else [v for v in (tm.relative_frequency_score, tm.syntactic_agency_ratio,
+                                                           tm.expert_quote_ratio, tm.sentence_female_ratio) if v is not None]
+            p = float(np.mean(valores)) if valores else 0.05
             salida.append([1 - p, p])
         return np.array(salida)

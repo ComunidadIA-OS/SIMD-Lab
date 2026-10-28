@@ -85,7 +85,7 @@ def documentos():
 
     # 3) Noticia con hombres protagonistas, solo texto
     docs.append(UnifiedMediaDocument(
-        doc_id="mock_noticia_presidente", source=MediaSource.GDELT, company_query=EMPRESA,
+        doc_id="mock_noticia_presidente", source=MediaSource.GUARDIAN, company_query=EMPRESA,
         url="https://example.org/noticia-presidente", language="es",
         title="El presidente de EcoRed presenta los resultados",
         raw_text=("El presidente de EcoRed, Javier López, anunció los resultados del trimestre. "

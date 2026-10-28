@@ -277,7 +277,7 @@
     "doc_id": "mock_noticia_presidente",
     "title": "El presidente de EcoRed presenta los resultados",
     "url": "https://example.org/noticia-presidente",
-    "source": "GDELT",
+    "source": "The Guardian",
     "company_query": "EcoRed",
     "raw_text_snippet": "El presidente de EcoRed, Javier López, anunció los resultados del trimestre. «Ha sido un año excelente», afirmó López. Según el director financiero, Miguel Sanz, el beneficio creció un 12 %. La empresa también agradeció el trabajo de su secretaria.",
     "text_samples": [

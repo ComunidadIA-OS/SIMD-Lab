@@ -4,3 +4,6 @@ __pycache__/
 .pytest_cache/
 .env
 *.tar.gz
+**/data/tmp/
+**/ramdisk/
+**/logs/
