@@ -1,6 +1,13 @@
 import logging
+import os
 import time
 from typing import List
+
+# GPU compartida entre TensorFlow (audio) y PyTorch (reranker y CLIP):
+# por defecto TensorFlow reserva toda la memoria de la GPU y PyTorch se queda sin sitio.
+# Tiene que definirse antes de que se importe TensorFlow.
+os.environ.setdefault("TF_FORCE_GPU_ALLOW_GROWTH", "true")
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 from src.analyzers.multimodal_pipeline import MultimodalAnalyzerPipeline, load_payloads
 from src.common.logging_setup import setup_logging
