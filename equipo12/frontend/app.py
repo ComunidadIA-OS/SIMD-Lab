@@ -305,10 +305,9 @@ def get_cached_documents(_test_ui: bool, company_name: str, n_docs: int, sources
     else:
         try:
             return fetch_analyzed_documents(company_name, n_docs, list(sources_tuple))
-        except Exception:
-            from tests.test_xai_fairness_mock import generate_mock_dataset
-            return generate_mock_dataset(company=company_name)
-
+        except Exception as exc:
+            st.error(f"Fallo en el pipeline real: {type(exc).__name__}: {exc}")
+            st.stop()
 
 @st.cache_data(show_spinner=False)
 def compute_cached_scores(_scorer, docs_payload):

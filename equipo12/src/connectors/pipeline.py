@@ -10,6 +10,12 @@ Quien analice los documentos debe llamar después a purge(res.documents).
 """
 from __future__ import annotations
 
+import os
+
+# El reranker usa PyTorch: que transformers no cargue TensorFlow
+# (en Windows lo bloquea Smart App Control y no hace falta aquí)
+os.environ.setdefault("USE_TF", "0")
+
 import asyncio
 import logging
 from dataclasses import dataclass, field
