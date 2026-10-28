@@ -30,7 +30,6 @@ class MediaSource(str, Enum):
     GDELT = "GDELT"
     GUARDIAN = "The Guardian"
     PODCAST = "Podcast Index"
-    FLICKR = "Flickr"
 
 class UnifiedMediaDocument(BaseModel):
     """Documento normalizado que sale de la ingesta (conectores + reranker + descarga).
@@ -99,12 +98,12 @@ class TextMetrics(BaseModel):
     sentence_female_ratio: float = Field(..., ge=0.0, le=1.0, description="Frases que se refieren a mujer")
     sentence_male_ratio: float = Field(..., ge=0.0, le=1.0, description="Frases que se refieren a hombre")
     sentence_neutral_ratio: float = Field(..., ge=0.0, le=1.0, description="Frases neutras")
-    lexical_root_diversity: float = Field(..., ge=0.0, le=1.0, description="Extracción de raíces léxicas asociadas a sujetos femeninos")
-    feminine_suffix_ratio: float = Field(..., ge=0.0, le=1.0, description="Análisis de terminaciones léxicas femeninas (-a, -ora, -triz)")
+    lexical_root_diversity: Optional[float] = Field(None, ge=0.0, le=1.0, description="Extracción de raíces léxicas asociadas a sujetos femeninos (None si no se puede calcular)")
+    feminine_suffix_ratio: Optional[float] = Field(None, ge=0.0, le=1.0, description="Análisis de terminaciones léxicas femeninas (-a, -ora, -triz) (None si no se puede calcular)")
     female_mention_frequency: int = Field(..., ge=0, description="Frecuencia absoluta de menciones")
     relative_frequency_score: float = Field(..., ge=0.0, le=1.0, description="Frecuencia relativa normalizada")
-    syntactic_agency_ratio: float = Field(..., ge=0.0, le=1.0, description="Agencia sintáctica (mujer como sujeto activo)")
-    expert_quote_ratio: float = Field(..., ge=0.0, le=1.0, description="Citas directas como experta")
+    syntactic_agency_ratio: Optional[float] = Field(None, ge=0.0, le=1.0, description="Agencia sintáctica (mujer como sujeto activo) (None si no se puede calcular)")
+    expert_quote_ratio: Optional[float] = Field(None, ge=0.0, le=1.0, description="Citas directas como experta (None si no se puede calcular)")
     headline_presence: float = Field(..., ge=0.0, le=1.0, description="Presencia en titular")
 
 
@@ -114,12 +113,12 @@ class AudioMetrics(BaseModel):
     closed_by: GenderTarget = Field(..., description="Quién cierra el audio")
     female_opened_score: float = Field(..., ge=0.0, le=1.0, description="Puntuación de apertura femenina")
     female_closed_score: float = Field(..., ge=0.0, le=1.0, description="Puntuación de cierre femenino")
-    middle_segment_female_ratio: float = Field(..., ge=0.0, le=1.0, description="Presencia en el 20%-80% central del audio")
-    female_speaking_time_ratio: float = Field(..., ge=0.0, le=1.0, description="Ratio de duración de voz femenina")
+    middle_segment_female_ratio: Optional[float] = Field(None, ge=0.0, le=1.0, description="Presencia en el 20%-80% central del audio (None si no se puede calcular)")
+    female_speaking_time_ratio: Optional[float] = Field(None, ge=0.0, le=1.0, description="Ratio de duración de voz femenina (None si no se puede calcular)")
     female_turn_count: int = Field(..., ge=0, description="Conteo de turnos de palabra femeninos")
-    speaking_turns_ratio: float = Field(..., ge=0.0, le=1.0, description="Proporción de turnos de habla femeninos")
-    acoustic_gender_confidence: float = Field(..., ge=0.0, le=1.0, description="Confianza del reconocimiento de género por voz")
-    no_interruption_score: float = Field(..., ge=0.0, le=1.0, description="Ausencia de interrupciones en turno femenino")
+    speaking_turns_ratio: Optional[float] = Field(None, ge=0.0, le=1.0, description="Proporción de turnos de habla femeninos (None si no se puede calcular)")
+    acoustic_gender_confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Confianza del reconocimiento de género por voz (None si no se puede calcular)")
+    no_interruption_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Ausencia de interrupciones en turno femenino (None si no se puede calcular)")
 
 
 # 3. MÉTRICAS DE IMAGEN
@@ -139,11 +138,11 @@ class ImageMetrics(BaseModel):
 class VideoMetrics(BaseModel):
     audio_track: AudioMetrics = Field(..., description="Métricas de audio del vídeo")
     frame_set_visuals: ImageMetrics = Field(..., description="Métricas de fotogramas del vídeo")
-    optical_flow_motion_score: float = Field(..., ge=0.0, le=1.0, description="Puntuación de movimiento por flujo óptico")
-    kinetic_dominance_ratio: float = Field(..., ge=0.0, le=1.0, description="Dominancia cinética femenina")
-    silhouette_change_histogram_score: float = Field(..., ge=0.0, le=1.0, description="Histograma de cambios por silueta")
+    optical_flow_motion_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Puntuación de movimiento por flujo óptico (None si no se puede calcular)")
+    kinetic_dominance_ratio: Optional[float] = Field(None, ge=0.0, le=1.0, description="Dominancia cinética femenina (None si no se puede calcular)")
+    silhouette_change_histogram_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Histograma de cambios por silueta (None si no se puede calcular)")
     female_screen_time_ratio: float = Field(..., ge=0.0, le=1.0, description="Tiempo total en pantalla")
-    active_speaker_sync_score: float = Field(..., ge=0.0, le=1.0, description="Sincronía de habla y presencia activa")
+    active_speaker_sync_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="Sincronía de habla y presencia activa (None si no se puede calcular)")
 
 
 # --- SUB-MODELOS ENRIQUECIDOS POR MUESTRA INDIVIDUAL ---
@@ -247,7 +246,7 @@ class ExtractedFeaturesPayload(BaseModel):
         feats["img_visual_gender_female_ratio"] = im.visual_gender_female_ratio if im else np.nan
         feats["img_shot_scale_importance_score"] = im.shot_scale_importance_score if im else np.nan
         feats["img_camera_angle_power_score"] = im.camera_angle_power_score if im else np.nan
-        feats["rule_of_thirds_alignment"] = im.rule_of_thirds_alignment if im else np.nan
+        feats["img_rule_of_thirds_alignment"] = im.rule_of_thirds_alignment if im else np.nan
         feats["img_shadow_lighting_prominence"] = im.shadow_lighting_prominence if im else np.nan
         feats["img_cross_image_persistence_ratio"] = im.cross_image_persistence_ratio if im else np.nan
         feats["img_spatial_centrality_score"] = im.spatial_centrality_score if im else np.nan
@@ -260,8 +259,9 @@ class ExtractedFeaturesPayload(BaseModel):
         feats["vid_kinetic_dominance_ratio"] = vm.kinetic_dominance_ratio if vm else np.nan
         feats["vid_silhouette_change_histogram_score"] = vm.silhouette_change_histogram_score if vm else np.nan
         feats["vid_female_screen_time_ratio"] = vm.female_screen_time_ratio if vm else np.nan
-        feats["active_speaker_sync_score"] = vm.active_speaker_sync_score if vm else np.nan
+        feats["vid_active_speaker_sync_score"] = vm.active_speaker_sync_score if vm else np.nan
 
-        return feats
+        # Las cuotas sin dato llegan como None: se pasan a NaN para pandas
+        return {k: (np.nan if v is None else v) for k, v in feats.items()}
 
 

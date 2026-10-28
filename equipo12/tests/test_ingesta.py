@@ -210,9 +210,8 @@ def test_guardian_imagen_principal_y_pie():
     assert d.image_urls == ["p1000"] and d.raw_text.startswith("Ana López, directora")
 
 
-# ---------- Podcast Index y Flickr ----------
+# ---------- Podcast Index  ----------
 import src.connectors.podcastindex_client as podcast_mod
-from src.connectors.flickr_client import FlickrConnector
 from src.connectors.media_downloader import STREAM_SOURCES
 from src.connectors.podcastindex_client import PodcastIndexConnector, auth_headers
 
@@ -261,23 +260,3 @@ def test_podcast_envia_cabeceras(monkeypatch):
 
 def test_podcast_audio_se_recorta():
     assert MediaSource.PODCAST in STREAM_SOURCES
-
-
-def test_flickr_parse():
-    data = {"stat": "ok", "photos": {"photo": [
-        {"id": "5", "owner": "o1", "title": "Junta de accionistas", "ownername": "Empresa X",
-         "description": {"_content": "Intervenci&oacute;n de la presidenta"}, "tags": "junta x",
-         "license": "4", "datetaken": "2024-06-01 10:00:00",
-         "url_z": "https://f/z.jpg", "url_l": "https://f/l.jpg"},
-        {"id": "6", "owner": "o2", "title": "Sin tamaño grande", "license": "9"}]}}
-    docs = FlickrConnector(api_key="k").parse_results(data, "X")
-    assert len(docs) == 1
-    d = docs[0]
-    assert d.image_urls == ["https://f/l.jpg"] and d.license == "CC BY 2.0"
-    assert d.url == "https://www.flickr.com/photos/o1/5" and "presidenta" in d.raw_text
-    assert d.published_date == "2024-06-01T10:00:00" and d.source == MediaSource.FLICKR
-
-
-def test_flickr_error_de_api():
-    with pytest.raises(RuntimeError, match="Invalid API Key"):
-        FlickrConnector(api_key="k").parse_results({"stat": "fail", "message": "Invalid API Key"}, "X")

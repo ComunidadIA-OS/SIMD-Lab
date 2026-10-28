@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import List
+from typing import Dict, List, Optional
 
 # GPU compartida entre TensorFlow (audio) y PyTorch (reranker y CLIP):
 # por defecto TensorFlow reserva toda la memoria de la GPU y PyTorch se queda sin sitio.
@@ -75,6 +75,44 @@ def _analizar(docs) -> List[ExtractedFeaturesPayload]:
     return payloads
 
 
+# ------------------------------------------------------------------ vocabulario
+# Perfil de vocabulario de la última auditoría en vivo de cada búsqueda
+_PERFILES: Dict[tuple, Optional[dict]] = {}
+
+
+def _clave(company: str, top_n: int, selected_sources: List[str]) -> tuple:
+    return company.strip().lower(), int(top_n), tuple(sorted(selected_sources))
+
+
+def _perfil_lexico(textos, company: str) -> Optional[dict]:
+    """Vocabulario asociado a mujeres y a hombres (ver src/analyzers/vocabulario_genero.py)."""
+    t0 = time.perf_counter()
+    try:
+        from src.analyzers.vocabulario_genero import perfil_lexico
+        perfil = perfil_lexico(textos, _get_pipeline().texto, empresa=company)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("No se ha podido calcular el vocabulario: %s: %s", type(exc).__name__, exc)
+        return None
+    logger.info("Vocabulario calculado en %.1f s", time.perf_counter() - t0)
+    return perfil
+
+
+def get_lexical_profile(company: str, top_n: int, selected_sources: List[str],
+                        docs: Optional[List[ExtractedFeaturesPayload]] = None) -> Optional[dict]:
+    """Perfil de vocabulario de una búsqueda.
+
+    En modo "live" se calcula con el texto completo durante la auditoría. Si no existe
+    (datos de prueba, JSON o resultado en caché), se calcula con las frases de ejemplo
+    guardadas en cada documento, que son menos.
+    """
+    perfil = _PERFILES.get(_clave(company, top_n, selected_sources))
+    if perfil is None and docs:
+        perfil = _perfil_lexico([(s.text, None) for d in docs for s in (d.text_samples or [])], company)
+        if perfil is not None:
+            perfil["solo_frases_de_ejemplo"] = True
+    return perfil
+
+
 def fetch_analyzed_documents(company: str, top_n: int, selected_sources: List[str]) -> List[ExtractedFeaturesPayload]:
     """Devuelve los documentos analizados filtrados por fuente y límite Top-N."""
     t0 = time.perf_counter()
@@ -86,6 +124,9 @@ def fetch_analyzed_documents(company: str, top_n: int, selected_sources: List[st
         if not result.documents:
             raise RuntimeError(f"Ninguna fuente devolvió documentos para '{company}'")
         docs = _quitar_vacios(_analizar(result.documents))
+        # Vocabulario sobre el texto completo de cada documento (no solo las frases de ejemplo)
+        _PERFILES[_clave(company, top_n, selected_sources)] = _perfil_lexico(
+            [(d.raw_text or d.title, d.language) for d in result.documents], company)
     else:
         if DATA_SOURCE == "mock":
             all_docs = generate_mock_dataset(company)

@@ -156,10 +156,10 @@ class VideoResult:
     motions: List[Motion]             # movimiento de cada persona en cada par de fotogramas
 
 
-def _relativo(mujeres: List[float], hombres: List[float]) -> float:
+def _relativo(mujeres: List[float], hombres: List[float]) -> Optional[float]:
     media_m = float(np.mean(mujeres)) if mujeres else 0.0
     media_h = float(np.mean(hombres)) if hombres else 0.0
-    return round(media_m / (media_m + media_h), 4) if media_m + media_h > 0 else 0.5
+    return round(media_m / (media_m + media_h), 4) if media_m + media_h > 0 else None   # sin movimiento: sin dato
 
 
 def _cuerpo(box, ancho, alto):
@@ -212,11 +212,11 @@ def compute_video_metrics(frames: ImageResult, tiempos: List[float], motions: Li
         audio_track=audio.metrics,          # métricas del audio del vídeo
         frame_set_visuals=frames.metrics,   # métricas de imagen de los fotogramas
         optical_flow_motion_score=_relativo(mov_m, mov_h),
-        kinetic_dominance_ratio=round(sum(mov_m) / total_mov, 4) if total_mov > 0 else 0.5,
+        kinetic_dominance_ratio=round(sum(mov_m) / total_mov, 4) if total_mov > 0 else None,
         silhouette_change_histogram_score=_relativo([m.silhouette for m in motions if m.gender == "F"],
                                                     [m.silhouette for m in motions if m.gender == "M"]),
         female_screen_time_ratio=round(len(con_mujeres) / len(tiempos), 4) if tiempos else 0.0,
-        active_speaker_sync_score=round(sincronia / len(habla_mujer), 4) if habla_mujer else 0.5,
+        active_speaker_sync_score=round(sincronia / len(habla_mujer), 4) if habla_mujer else None,
     )
 
 

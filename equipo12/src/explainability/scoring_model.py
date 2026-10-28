@@ -4,6 +4,39 @@ import numpy as np
 import pandas as pd
 from src.common.schemas import ExtractedFeaturesPayload
 
+# Prefijo de las columnas de cada modalidad y atributo del documento con sus métricas
+PREFIJOS = {"txt_": "text_metrics", "aud_": "audio_metrics", "img_": "image_metrics", "vid_": "video_metrics"}
+
+
+def _ponderada(pares) -> float:
+    """Media ponderada (0-100) de las métricas que tienen dato.
+
+    Una métrica sin dato (None, p. ej. nadie citado) no cuenta como 0 ni como 0,5:
+    se deja fuera y su peso se reparte entre las demás. Si todas tienen dato, da
+    exactamente lo mismo que la suma ponderada original (los pesos suman 1).
+    """
+    validos = [(w, float(v)) for w, v in pares if v is not None and not np.isnan(v)]
+    if not validos:
+        return np.nan
+    peso = sum(w for w, _ in validos)
+    return float(np.clip(sum(w * v for w, v in validos) / peso * 100.0, 0.0, 100.0))
+
+
+def _entrada_modelo(features_df: pd.DataFrame, docs) -> pd.DataFrame:
+    """Matriz para LightGBM y SHAP.
+
+    Una métrica sin dato de una modalidad que sí está entra como 0,5 (neutra, para que
+    en SHAP no sume ni reste) y una modalidad que no está entra como 0.
+    """
+    X = features_df.reindex(columns=FEATURE_COLUMNS).reset_index(drop=True)
+    for prefijo, attr in PREFIJOS.items():
+        cols = [c for c in FEATURE_COLUMNS if c.startswith(prefijo)]
+        presente = np.array([getattr(d, attr, None) is not None for d in docs], dtype=bool)
+        if presente.any():
+            X.loc[presente, cols] = X.loc[presente, cols].fillna(0.5)
+    return X.fillna(0.0)
+
+
 FEATURE_COLUMNS = [
     # Texto (9)
     "txt_sentence_female_ratio",
@@ -142,70 +175,66 @@ class CorporateGenderScorer:
         self, docs: List[ExtractedFeaturesPayload]
     ) -> pd.DataFrame:
         rows = [d.to_feature_dict() for d in docs]
-        return pd.DataFrame(rows).reindex(columns=FEATURE_COLUMNS, fill_value=0.0)
+        return _entrada_modelo(pd.DataFrame(rows), docs)
 
     def _calc_text_score(self, tm: Any) -> float:
         if tm is None:
             return np.nan
         cnt_norm = min(float(tm.female_mention_frequency) / 15.0, 1.0)
-        score = (
-            0.18 * tm.sentence_female_ratio
-            + 0.04 * tm.sentence_male_ratio
-            + 0.06 * tm.sentence_neutral_ratio
-            + 0.08 * tm.lexical_root_diversity
-            + 0.08 * tm.feminine_suffix_ratio
-            + 0.10 * tm.relative_frequency_score
-            + 0.16 * tm.syntactic_agency_ratio
-            + 0.15 * tm.expert_quote_ratio
-            + 0.07 * tm.headline_presence
-            + 0.08 * cnt_norm
-        ) * 100.0
-        return float(np.clip(score, 0.0, 100.0))
+        return _ponderada([
+            (0.18, tm.sentence_female_ratio),
+            (0.04, tm.sentence_male_ratio),
+            (0.06, tm.sentence_neutral_ratio),
+            (0.08, tm.lexical_root_diversity),
+            (0.08, tm.feminine_suffix_ratio),
+            (0.10, tm.relative_frequency_score),
+            (0.16, tm.syntactic_agency_ratio),
+            (0.15, tm.expert_quote_ratio),
+            (0.07, tm.headline_presence),
+            (0.08, cnt_norm),
+        ])
 
     def _calc_audio_score(self, am: Any) -> float:
         if am is None:
             return np.nan
         cnt_norm = min(float(am.female_turn_count) / 10.0, 1.0)
-        score = (
-            0.10 * am.female_opened_score
-            + 0.12 * am.middle_segment_female_ratio
-            + 0.10 * am.female_closed_score
-            + 0.25 * am.female_speaking_time_ratio
-            + 0.15 * am.speaking_turns_ratio
-            + 0.08 * am.acoustic_gender_confidence
-            + 0.10 * am.no_interruption_score
-            + 0.10 * cnt_norm
-        ) * 100.0
-        return float(np.clip(score, 0.0, 100.0))
+        return _ponderada([
+            (0.10, am.female_opened_score),
+            (0.12, am.middle_segment_female_ratio),
+            (0.10, am.female_closed_score),
+            (0.25, am.female_speaking_time_ratio),
+            (0.15, am.speaking_turns_ratio),
+            (0.08, am.acoustic_gender_confidence),
+            (0.10, am.no_interruption_score),
+            (0.10, cnt_norm),
+        ])
 
     def _calc_image_score(self, im: Any) -> float:
         if im is None:
             return np.nan
         cnt_norm = min(float(im.cross_image_appearance_count) / 10.0, 1.0)
-        score = (
-            0.20 * im.visual_gender_female_ratio
-            + 0.10 * im.shot_scale_importance_score
-            + 0.10 * im.camera_angle_power_score
-            + 0.08 * im.rule_of_thirds_alignment
-            + 0.08 * im.shadow_lighting_prominence
-            + 0.10 * im.cross_image_persistence_ratio
-            + 0.10 * im.spatial_centrality_score
-            + 0.14 * im.leadership_visual_context
-            + 0.10 * cnt_norm
-        ) * 100.0
-        return float(np.clip(score, 0.0, 100.0))
+        return _ponderada([
+            (0.20, im.visual_gender_female_ratio),
+            (0.10, im.shot_scale_importance_score),
+            (0.10, im.camera_angle_power_score),
+            (0.08, im.rule_of_thirds_alignment),
+            (0.08, im.shadow_lighting_prominence),
+            (0.10, im.cross_image_persistence_ratio),
+            (0.10, im.spatial_centrality_score),
+            (0.14, im.leadership_visual_context),
+            (0.10, cnt_norm),
+        ])
 
     def _calc_video_score(self, vm: Any) -> float:
         if vm is None:
             return np.nan
-        score = (
-            0.15 * vm.optical_flow_motion_score
-            + 0.15 * vm.kinetic_dominance_ratio
-            + 0.15 * vm.silhouette_change_histogram_score
-            + 0.35 * vm.female_screen_time_ratio
-            + 0.20 * vm.active_speaker_sync_score
-        ) * 100.0
-        return float(np.clip(score, 0.0, 100.0))
+        return _ponderada([
+            (0.15, vm.optical_flow_motion_score),
+            (0.15, vm.kinetic_dominance_ratio),
+            (0.15, vm.silhouette_change_histogram_score),
+            (0.35, vm.female_screen_time_ratio),
+            (0.20, vm.active_speaker_sync_score),
+        ])
 
     def predict_importance_score(
         self, docs: List[ExtractedFeaturesPayload]
@@ -214,9 +243,7 @@ class CorporateGenderScorer:
         features_df = pd.DataFrame(features_list)
 
         # 1. Alinear exactamente las 29 columnas con las de entrenamiento para LightGBM y SHAP
-        features_for_model = features_df.reindex(
-            columns=FEATURE_COLUMNS, fill_value=0.0
-        ).fillna(0.0)
+        features_for_model = _entrada_modelo(features_df, docs)
 
         if hasattr(self.model, "predict"):
             base_preds = self.model.predict(features_for_model)
@@ -293,22 +320,22 @@ class CorporateGenderScorer:
             "Texto": (
                 round(float(np.nanmean(scores_texto)), 1)
                 if not np.all(np.isnan(scores_texto))
-                else 0.0
+                else None
             ),
             "Audio": (
                 round(float(np.nanmean(scores_audio)), 1)
                 if not np.all(np.isnan(scores_audio))
-                else 0.0
+                else None
             ),
             "Imagen": (
                 round(float(np.nanmean(scores_imagen)), 1)
                 if not np.all(np.isnan(scores_imagen))
-                else 0.0
+                else None
             ),
             "Vídeo": (
                 round(float(np.nanmean(scores_video)), 1)
                 if not np.all(np.isnan(scores_video))
-                else 0.0
+                else None
             ),
         }
 
@@ -317,4 +344,4 @@ class CorporateGenderScorer:
             "by_modality": by_modality,
             "dataframe": df_results,
             "features_only": features_for_model,
-        }
+        }

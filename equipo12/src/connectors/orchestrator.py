@@ -11,7 +11,6 @@ import aiohttp
 
 from src.common.schemas import MediaSource, UnifiedMediaDocument
 from src.connectors.base import DEFAULT_USER_AGENT, BaseMediaConnector
-from src.connectors.flickr_client import FlickrConnector
 from src.connectors.gdelt_client import GDELTConnector
 from src.connectors.guardian_client import GuardianConnector
 from src.connectors.internet_archive_client import InternetArchiveConnector
@@ -28,7 +27,6 @@ CONNECTOR_CLASSES = {
     MediaSource.YOUTUBE: YouTubeConnector,
     MediaSource.ARCHIVE: InternetArchiveConnector,
     MediaSource.PODCAST: PodcastIndexConnector,
-    MediaSource.FLICKR: FlickrConnector,
 }
 
 
