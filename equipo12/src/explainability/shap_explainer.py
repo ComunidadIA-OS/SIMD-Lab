@@ -79,62 +79,83 @@ def _traducir_textos_shap(fig):
 
 class ShapExplanationEngine:
 
-  def __init__(self, scorer):
-    self.scorer = scorer
-    self.explainer = shap.TreeExplainer(scorer.model)
+    def __init__(self, scorer):
+        self.scorer = scorer
+        self.weights = scorer.weights
+        self.base_parity_value = 0.5  # Referencia de paridad/neutralidad (50%)
 
-  def plot_global_summary(
-      self, features_df: pd.DataFrame, max_display: int = 30
-  ):
-    """Calcula el impacto global de variables con etiquetas en español y sin agrupar."""
-    raw_exp = self.explainer(features_df)
+    def _compute_exact_shap(self, features_df: pd.DataFrame):
+        """Calcula los valores exactos de Shapley analíticamente sobre la ponderación real."""
+        cols = features_df.columns.tolist()
+        vals_matrix = np.zeros(features_df.shape)
+        data_matrix = np.nan_to_num(features_df.values, nan=0.0)
 
-    renamed_features = [
-        FEATURE_LABELS.get(c, c) for c in features_df.columns.tolist()
-    ]
-    clean_exp = shap.Explanation(
-        values=raw_exp.values,
-        base_values=raw_exp.base_values,
-        data=raw_exp.data,
-        feature_names=renamed_features,
-    )
+        for j, col in enumerate(cols):
+            w = self.weights.get(col, 0.0) * 100.0  # Escala sobre 100
+            x = features_df[col].values
 
-    n_features = len(features_df.columns)
-    display_limit = max(max_display, n_features + 1)
+            # Penalización en caso de frases masculinas predominantes
+            if col == "txt_sentence_male_ratio":
+                phi = -w * (x - self.base_parity_value)
+            else:
+                phi = w * (x - self.base_parity_value)
 
-    fig, ax = plt.subplots(figsize=(9, 8))
-    shap.plots.bar(clean_exp, max_display=display_limit, show=False)
-    _traducir_textos_shap(fig)
+            # Si el documento no tiene esta métrica (NaN), el impacto de Shapley es exactamente 0
+            phi = np.where(np.isnan(x), 0.0, phi)
+            vals_matrix[:, j] = phi
 
-    plt.title(
-        "Impacto Global de Variables en el Score Multimodal",
-        fontsize=13,
-        fontfamily="serif",
-        color="#0F172A",
-    )
-    plt.tight_layout()
-    return fig
+        base_val = 50.0  # Base neutral E[f(x)]
+        return vals_matrix, data_matrix, base_val
 
-  def plot_local_waterfall(
+    def plot_global_summary(
+        self, features_df: pd.DataFrame, max_display: int = 30
+    ):
+        """Calcula el impacto global de variables con etiquetas en español y sin agrupar."""
+        vals_matrix, data_matrix, base_val = self._compute_exact_shap(features_df)
+        renamed_features = [
+            FEATURE_LABELS.get(c, c) for c in features_df.columns.tolist()
+        ]
+        clean_exp = shap.Explanation(
+            values=vals_matrix,
+            base_values=np.full(features_df.shape[0], base_val),
+            data=data_matrix,
+            feature_names=renamed_features,
+        )
+
+        n_features = len(features_df.columns)
+        display_limit = max(max_display, n_features + 1)
+
+        fig, ax = plt.subplots(figsize=(9, 8))
+        shap.plots.bar(clean_exp, max_display=display_limit, show=False)
+        _traducir_textos_shap(fig)
+
+        plt.title(
+            "Impacto Global de Variables en el Score Multimodal (SHAP Analítico)",
+            fontsize=13,
+            fontfamily="serif",
+            color="#0F172A",
+        )
+        plt.tight_layout()
+        return fig
+
+    def plot_local_waterfall(
         self,
         features_df: pd.DataFrame,
         doc_index: int = 0,
         modality_prefix: str = None,
     ):
-        raw_exp = self.explainer(features_df)
-        doc_vals = raw_exp.values[doc_index]
-        doc_data = raw_exp.data[doc_index]
-        base_val = (
-            raw_exp.base_values[doc_index]
-            if hasattr(raw_exp.base_values, "__len__")
-            else raw_exp.base_values
-        )
+        vals_matrix, data_matrix, base_val = self._compute_exact_shap(features_df)
         all_cols = features_df.columns.tolist()
+
+        doc_vals = vals_matrix[doc_index]
+        doc_data = data_matrix[doc_index]
 
         if modality_prefix:
             indices = [i for i, c in enumerate(all_cols) if c.startswith(modality_prefix)]
-            # Comprobar si todas las métricas de esa modalidad son 0 o NaN en este documento
-            if not indices or np.all(doc_data[indices] == 0.0):
+            raw_doc_slice = features_df.iloc[doc_index, indices]
+
+            # Comprobar si todas las métricas de esa modalidad son NaN o están ausentes
+            if raw_doc_slice.isna().all() or np.all(doc_data[indices] == 0.0):
                 fig, ax = plt.subplots(figsize=(8, 2.5))
                 ax.text(
                     0.5, 0.5,
@@ -144,6 +165,7 @@ class ShapExplanationEngine:
                 )
                 ax.axis("off")
                 return fig
+
             doc_vals = doc_vals[indices]
             doc_data = doc_data[indices]
             filtered_cols = [all_cols[i] for i in indices]
