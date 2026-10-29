@@ -6,7 +6,7 @@ from lime.lime_image import LimeImageExplainer
 from lime.lime_text import LimeTextExplainer
 import numpy as np
 from PIL import Image
-from skimage.segmentation import mark_boundaries
+from skimage.segmentation import mark_boundaries, slic
 
 POSITIVE_LEADERSHIP_WORDS = {
     "directora",
@@ -171,9 +171,9 @@ class LimeMultimodalEngine:
   # 2. EXPLICABILIDAD DE IMAGEN (SIN OPENCV / EFÍMERO Y NATIVO)
   # =========================================================================
   def _load_image_rgb(
-      self, image_input: Union[str, Path, Image.Image, np.ndarray]
+      self, image_input: Union[str, Path, Image.Image, np.ndarray],target_size: tuple = (448, 448)
   ) -> np.ndarray:
-    """Carga y reescala a (224, 224) utilizando exclusivamente Pillow y NumPy."""
+    """Carga la imagen manteniendo mejor resolución para contornos más nítidos."""
     if isinstance(image_input, (str, Path)):
       p = Path(image_input)
       if not p.exists():
@@ -191,18 +191,21 @@ class LimeMultimodalEngine:
     else:
       raise ValueError(f"Tipo no soportado: {type(image_input)}")
 
-    pil_resized = pil_img.resize((224, 224), Image.Resampling.BILINEAR)
+    pil_resized = pil_img.resize(target_size, Image.Resampling.LANCZOS)
     return np.array(pil_resized)
 
   def explain_image_instance(
         self,
         image_input: Union[str, Path, Image.Image, np.ndarray],
-        num_features: int = 4,
-        num_samples: int = 80,
+        num_features: int = 5,
+        num_samples: int = 300,
     ) -> np.ndarray:
         """Ejecuta LIME sobre una imagen real explicando la densidad de rasgos en el encuadre."""
-        img_rgb = self._load_image_rgb(image_input)
-
+        img_rgb = self._load_image_rgb(image_input, target_size=(448, 448))
+        def custom_segmenter(image):
+            return slic(
+                image, n_segments=60, compactness=15.0, sigma=1, start_label=0
+            )
         def _vision_predict(images):
             preds = []
             h, w = images[0].shape[:2]
@@ -222,6 +225,7 @@ class LimeMultimodalEngine:
             top_labels=1,
             hide_color=0,
             num_samples=num_samples,
+            segmentation_fn=custom_segmenter,
         )
 
         temp, mask = explanation.get_image_and_mask(
@@ -232,4 +236,4 @@ class LimeMultimodalEngine:
         )
 
         # Retornar la imagen con las fronteras de los superpíxeles trazadas en amarillo
-        return mark_boundaries(temp / 255.0, mask)
+        return mark_boundaries(temp / 255.0, mask, color=(1, 0.8, 0), mode="thick")
