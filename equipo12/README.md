@@ -390,3 +390,12 @@ Si esto funciona, ejecuta ya todas las celdas de la libreta de jupyter my_app.ip
 Para seguir el progreso de la auditoría desde una terminal (en la carpeta equipo12):
 
 tail -f logs/auditoria.log
+
+## 9. Hoja de ruta
+| Fase | Fechas aproximadas | Hitos y entregables clave | Descripción técnica |
+| :--- | :--- | :--- | :--- |
+| **Fase 0: Prototipado, UI y XAI Base** | 15 – 20 de octubre | • Prototipo de interfaz gráfica (UI)<br>• Motores base SHAP y LIME | Inicio del desarrollo del proyecto. Diseño de la interfaz gráfica de usuario e implementación previa de los explicadores locales SHAP y LIME para texto e imagen. |
+| **Fase 1: Inicialización del Repositorio** | 21 de octubre | • Estructura base del proyecto<br>• Analizador de texto | Creación del repositorio y primer pipeline de procesamiento lingüístico y métricas textuales. |
+| **Fase 2: Pipeline Multimodal y Validación** | 22 – 27 de octubre | • Pipeline multimodal integrado<br>• Pruebas con datos sintéticos<br>• Gestión de ramas y licencia GPL v3 | Integración de analizadores para audio, vídeo e imagen; pruebas funcionales con datos sintéticos y coordinación de ramas colaborativas. |
+| **Fase 3: Datos Reales y Optimización** | 28 de octubre | • Migración a datos reales multimedia<br>• Depuración de memoria y Streamlit<br>• Descarte de fuentes inestables (GDELT) | Conexión con datos reales, resolución de cuellos de botella de memoria, eliminación de dependencias incompatibles de monitorización y fusión hacia la rama principal. |
+| **Fase 4: Scoring Ponderado y Cierre XAI** | 29 de octubre | • Ponderación matemática por volumen<br>• Desacoplamiento de LightGBM<br>• Optimización de LIME (superpíxeles)<br>• Documentación y reproducibilidad | Ajuste del cálculo del índice global ponderado, independencia de dependencias pesadas en SHAP, mejora visual en la segmentación de LIME, resolución de bugs y redacción final del README. |
