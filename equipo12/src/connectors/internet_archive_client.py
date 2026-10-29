@@ -44,7 +44,8 @@ class InternetArchiveConnector(BaseMediaConnector):
                 out["audio"].append((float(f.get("size", 0) or 0), url))
             elif name.endswith(".vtt") or name.endswith(".srt"):
                 out["subs"].append(url)
-            elif fmt == "Item Tile":
+            elif fmt == "Item Tile" and not name.lower().endswith(("_waveform.png", "_spectrogram.png")):
+                # Solo considerar miniatura visual si no es una representación técnica de la onda sonora
                 out["thumb"].append(url)
         # Para vídeo/audio nos quedamos con el fichero más ligero (luego solo se lee un tramo)
         for k in ("video", "audio"):

@@ -211,7 +211,6 @@ class LimeMultimodalEngine:
 
             for im in images:
                 foco = im[y1:y2, x1:x2]
-                # Densidad de rasgos activos en el encuadre principal
                 actividad = float(np.mean(foco > 30))
                 score = np.clip(actividad, 0.05, 0.95)
                 preds.append([1.0 - score, score])
@@ -224,3 +223,13 @@ class LimeMultimodalEngine:
             hide_color=0,
             num_samples=num_samples,
         )
+
+        temp, mask = explanation.get_image_and_mask(
+            label=explanation.top_labels[0],
+            positive_only=True,
+            num_features=num_features,
+            hide_rest=False,
+        )
+
+        # Retornar la imagen con las fronteras de los superpíxeles trazadas en amarillo
+        return mark_boundaries(temp / 255.0, mask)

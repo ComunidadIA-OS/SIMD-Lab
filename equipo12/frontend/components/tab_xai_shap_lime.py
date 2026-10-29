@@ -194,18 +194,7 @@ def render_xai_tab(docs, score_data, scorer):
                 # Métodos interpretativos disponibles
                 method_options = ["SHAP Waterfall (Atribución Local)"]
                 if selected_modality == "Texto" and len(doc_texts) > 0:
-                    def _fmt_txt(i: int) -> str:
-                        val = getattr(doc_texts[i], 'text', str(doc_texts[i])).strip()
-                        if i == 0 and len(val) > 200:
-                            return f"Texto Completo ({len(val)} caracteres): {val[:35]}..."
-                        return f"Mención {i}: {val[:35]}..."
-
-                    selected_txt_idx = st.selectbox(
-                        "Fragmento de texto:",
-                        options=list(range(len(doc_texts))),
-                        format_func=_fmt_txt,
-                        key="xai_lime_txt_subidx",
-                    )
+                    method_options.append("Menciones detectadas en el texto")
                 elif selected_modality == "Imagen" and len(doc_images) > 0:
                     method_options.append("LIME Imagen (Superpíxeles)")
 
@@ -215,14 +204,20 @@ def render_xai_tab(docs, score_data, scorer):
                     key="xai_local_method",
                 )
 
-                # Selectores de sub-muestra (fragmento de texto o fotografía)
+                # Selectores de sub-muestra según el método elegido
                 if selected_method.startswith(("LIME", "Menciones")):
                     st.divider()
                     if selected_modality == "Texto" and len(doc_texts) > 0:
+                        def _fmt_txt(i: int) -> str:
+                            val = getattr(doc_texts[i], 'text', str(doc_texts[i])).strip()
+                            if i == 0 and len(val) > 200:
+                                return f"📄 Texto Completo ({len(val)} caracteres): {val[:35]}..."
+                            return f"💬 Mención {i}: {val[:35]}..."
+
                         selected_txt_idx = st.selectbox(
                             "Fragmento de texto:",
                             options=list(range(len(doc_texts))),
-                            format_func=lambda i: f"Texto {i+1}: {getattr(doc_texts[i], 'text', str(doc_texts[i]))[:30]}...",
+                            format_func=_fmt_txt,
                             key="xai_lime_txt_subidx",
                         )
                     elif selected_modality == "Imagen" and len(doc_images) > 0:
