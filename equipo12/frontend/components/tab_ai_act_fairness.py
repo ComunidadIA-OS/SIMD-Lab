@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import streamlit as st
 from pathlib import Path
+import os
 
 from src.governance_ai_act.audit_logger import (
     AIActComplianceLogger,
@@ -83,13 +84,15 @@ def render_ai_act_tab(company: str, score_data: dict, docs: list = None):
         ]
         st.dataframe(pd.DataFrame(summary_general), use_container_width=True, hide_index=True)
 
+    # En frontend/components/tab_ai_act_fairness.py:
+
     with st.expander("Desglose de Carga de Cómputo por Módulos del Pipeline", expanded=False):
         stage_mapping = {
             "Ingesta 5 APIs & Rerank": "1. Ingesta de Datos y Rerank",
-            "NLP (spaCy + Coref)": "2. Procesamiento NLP (spaCy + Coref)",
-            "Audio (inaSpeech + pyannote)": "3. Procesamiento Acústico y Diarización",
-            "Visión (InsightFace + CLIP)": "4. Análisis de Visión y Clips",
-            "XAI (LightGBM + SHAP/LIME)": "5. Explicabilidad Local y Global (SHAP/LIME)"
+            "NLP (spaCy Dependencias)": "2. Procesamiento NLP (spaCy)",
+            "Audio (inaSpeechSegmenter)": "3. Segmentación Acústica de Género",
+            "Visión (YuNet + OpenCLIP)": "4. Detección Facial y Visión de Liderazgo",
+            "XAI (SHAP Analítico + LIME)": "5. Explicabilidad Local y Global (SHAP/LIME)"
         }
         
         stages_data = []
@@ -121,18 +124,27 @@ def render_ai_act_tab(company: str, score_data: dict, docs: list = None):
             st.info("El dataset actual opera a nivel de agregado global sin desglose explícito por fuente.")
 
     with st.expander("Supervisión Humana — Artículo 14 EU AI Act (Human-in-the-Loop)", expanded=False):
-        global_txt = float(df_base["score_texto"].mean()) if "score_texto" in df_base.columns else 57.2
-        global_aud = float(df_base["score_audio"].mean()) if "score_audio" in df_base.columns else 28.4
-        global_img = float(df_base["score_imagen"].mean()) if "score_imagen" in df_base.columns else 60.1
-        global_vid = float(df_base["score_video"].mean()) if "score_video" in df_base.columns else 29.0
+        # 1. Puntuaciones reales por modalidad (sin valores inventados)
+        by_mod = score_data.get("by_modality", {})
+        global_txt = by_mod.get("Texto") or 0.0
+        global_aud = by_mod.get("Audio") or 0.0
+        global_img = by_mod.get("Imagen") or 0.0
+        global_vid = by_mod.get("Vídeo") or 0.0
         
-        official_global_score = float(score_data.get("global_score", 53.0))
+        official_global_score = float(score_data.get("global_score", 0.0))
+
+        # 2. Pesos reales calculados en función del número de documentos válidos
+        n_txt = sum(1 for s in df_base.get("score_texto", []) if pd.notna(s))
+        n_aud = sum(1 for s in df_base.get("score_audio", []) if pd.notna(s))
+        n_img = sum(1 for s in df_base.get("score_imagen", []) if pd.notna(s))
+        n_vid = sum(1 for s in df_base.get("score_video", []) if pd.notna(s))
+        total_validos = max(n_txt + n_aud + n_img + n_vid, 1)
 
         modal_summary_data = [
-            {"Modalidad": "Texto", "Peso Relativo (%)": 61.6, "Score Medio Consolidado": round(global_txt, 1)},
-            {"Modalidad": "Audio", "Peso Relativo (%)": 8.2, "Score Medio Consolidado": round(global_aud, 1)},
-            {"Modalidad": "Imagen", "Peso Relativo (%)": 21.9, "Score Medio Consolidado": round(global_img, 1)},
-            {"Modalidad": "Vídeo", "Peso Relativo (%)": 8.2, "Score Medio Consolidado": round(global_vid, 1)},
+            {"Modalidad": "Texto", "Peso Relativo (%)": round((n_txt / total_validos) * 100, 1), "Score Medio Consolidado": round(float(global_txt), 1)},
+            {"Modalidad": "Audio", "Peso Relativo (%)": round((n_aud / total_validos) * 100, 1), "Score Medio Consolidado": round(float(global_aud), 1)},
+            {"Modalidad": "Imagen", "Peso Relativo (%)": round((n_img / total_validos) * 100, 1), "Score Medio Consolidado": round(float(global_img), 1)},
+            {"Modalidad": "Vídeo", "Peso Relativo (%)": round((n_vid / total_validos) * 100, 1), "Score Medio Consolidado": round(float(global_vid), 1)},
         ]
         df_modal_global = pd.DataFrame(modal_summary_data)
 
@@ -235,10 +247,21 @@ def render_ai_act_tab(company: str, score_data: dict, docs: list = None):
         human_rep,
         carbon_rep
     )
-
-    st.download_button(
-        label="Descargar Certificado EU AI Act + Trazabilidad Art. 12 (JSON)",
-        data=cert_json if isinstance(cert_json, str) else json.dumps(cert_json, indent=2, ensure_ascii=False),
-        file_name=f"certificado_ai_act_{company.lower()}.json",
-        mime="application/json"
-    )
+    col_dl, col_purge = st.columns([2, 1], gap="medium")
+    
+    with col_dl:
+        st.download_button(
+            label="Descargar Certificado EU AI Act + Trazabilidad Art. 12 (JSON)",
+            data=cert_json if isinstance(cert_json, str) else json.dumps(cert_json, indent=2, ensure_ascii=False),
+            file_name=f"certificado_ai_act_{company.lower()}.json",
+            mime="application/json"
+        )
+    with col_purge:
+        if st.button("Purgar Multimedia y Cerrar Auditoría", type="secondary"):
+            media_dir = Path(os.getenv("MEDIA_DIR", "/tmp/ramdisk"))
+            if media_dir.exists():
+                import shutil
+                for sub in media_dir.iterdir():
+                    if sub.is_dir():
+                        shutil.rmtree(sub, ignore_errors=True)
+            st.success("Archivos multimedia efímeros eliminados de disco conforme al Art. 5.1.c RGPD.")

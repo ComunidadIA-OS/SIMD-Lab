@@ -173,7 +173,7 @@ class ExtractedFeaturesPayload(BaseModel):
     source: MediaSource
     company_query: str
     raw_text_snippet: Optional[str] = None
-    
+    full_raw_text: Optional[str] = None
     # Listas enriquecidas con soporte multi-muestra y métricas individuales
     text_samples: List[TextSample] = Field(default_factory=list)
     media_image_samples: List[ImageSample] = Field(default_factory=list)

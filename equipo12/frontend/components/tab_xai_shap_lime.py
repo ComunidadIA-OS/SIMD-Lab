@@ -31,6 +31,10 @@ def _menciones_html(texto: str, empresa: str) -> str:
 def _extract_doc_texts(doc) -> list:
     """Extrae todos los fragmentos o textos disponibles (objetos o strings)."""
     texts = []
+    full = getattr(doc, "full_raw_text", None)
+    if full and str(full).strip():
+        texts.append(full.strip())
+
     samples = getattr(doc, "text_samples", None)
     if isinstance(samples, (list, tuple)):
         for s in samples:
@@ -39,10 +43,8 @@ def _extract_doc_texts(doc) -> list:
                 texts.append(s)  # Guardamos el objeto o texto completo
 
     snippet = getattr(doc, "raw_text_snippet", None)
-    if snippet and str(snippet).strip():
-        # Evitar duplicados si el snippet ya está
-        if not any(getattr(s, "text", str(s)) == str(snippet).strip() for s in texts):
-            texts.insert(0, snippet)
+    if snippet and str(snippet).strip() and str(snippet).strip() not in texts:
+        texts.append(str(snippet).strip())
     return texts
 
 
@@ -192,7 +194,18 @@ def render_xai_tab(docs, score_data, scorer):
                 # Métodos interpretativos disponibles
                 method_options = ["SHAP Waterfall (Atribución Local)"]
                 if selected_modality == "Texto" and len(doc_texts) > 0:
-                    method_options.append("Menciones detectadas en el texto")
+                    def _fmt_txt(i: int) -> str:
+                        val = getattr(doc_texts[i], 'text', str(doc_texts[i])).strip()
+                        if i == 0 and len(val) > 200:
+                            return f"Texto Completo ({len(val)} caracteres): {val[:35]}..."
+                        return f"Mención {i}: {val[:35]}..."
+
+                    selected_txt_idx = st.selectbox(
+                        "Fragmento de texto:",
+                        options=list(range(len(doc_texts))),
+                        format_func=_fmt_txt,
+                        key="xai_lime_txt_subidx",
+                    )
                 elif selected_modality == "Imagen" and len(doc_images) > 0:
                     method_options.append("LIME Imagen (Superpíxeles)")
 
@@ -264,7 +277,7 @@ def render_xai_tab(docs, score_data, scorer):
                                 <li><strong style="color: #F43F5E;">■ Barras rojas (+)</strong>: Variables que incrementan la relevancia de liderazgo femenino por encima de la media base.</li>
                                 <li><strong style="color: #0EA5E9;">■ Barras azules (−)</strong>: Factores que restan puntuación o penalizan la visibilidad del perfil.</li>
                                 <li><strong>f(x)</strong>: Puntuación o score final asignado al documento tras aplicar todas las desviaciones.</li>
-                                <li><strong>E[f(x)]</strong>: Valor base esperado (puntuación media de referencia en el dataset de entrenamiento).</li>
+                                <li><strong>E[f(x)]</strong>: Puntuación base neutral de paridad (50 puntos).</li>
                             </ul>
                         </div>
                         """,
@@ -373,4 +386,4 @@ def render_xai_tab(docs, score_data, scorer):
                         except Exception as e:
                             st.error(f"Error procesando la muestra visual: {e}")
                     else:
-                        st.info("No existen muestras de imagen disponibles para auditar con LIME.")
+                        st.info("No existen muestras de imagen disponibles para auditar con LIME.")

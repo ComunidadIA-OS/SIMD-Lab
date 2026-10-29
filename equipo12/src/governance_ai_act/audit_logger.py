@@ -30,12 +30,14 @@ class ResourceAndCarbonTracker:
         energy_wh = round(emissions_g * 2.4, 4)
 
         # Desglose por etapa del pipeline para graficar en el Dashboard
+        # En src/governance_ai_act/audit_logger.py -> dentro de measure_pipeline_footprint:
+
         stages_breakdown = [
             {"Etapa": "1. Ingesta 5 APIs & Rerank", "Hardware": "CPU / Red", "Energía (Wh)": round(energy_wh * 0.15, 5), "CO2eq (g)": round(emissions_g * 0.15, 5), "Carga (%)": max(12.0, round(cpu_pct * 0.4, 1))},
-            {"Etapa": "2. NLP (spaCy + Coref)", "Hardware": "GPU / CPU", "Energía (Wh)": round(energy_wh * 0.20, 5), "CO2eq (g)": round(emissions_g * 0.20, 5), "Carga (%)": 38.5},
-            {"Etapa": "3. Audio (inaSpeech + pyannote)", "Hardware": "GPU UHCCloud", "Energía (Wh)": round(energy_wh * 0.28, 5), "CO2eq (g)": round(emissions_g * 0.28, 5), "Carga (%)": 64.0},
-            {"Etapa": "4. Visión (InsightFace + CLIP)", "Hardware": "GPU UHCCloud", "Energía (Wh)": round(energy_wh * 0.30, 5), "CO2eq (g)": round(emissions_g * 0.30, 5), "Carga (%)": 72.5},
-            {"Etapa": "5. XAI (LightGBM + SHAP/LIME)", "Hardware": "CPU Ligera", "Energía (Wh)": round(energy_wh * 0.07, 5), "CO2eq (g)": round(emissions_g * 0.07, 5), "Carga (%)": max(8.0, cpu_pct)},
+            {"Etapa": "2. NLP (spaCy Dependencias)", "Hardware": "CPU", "Energía (Wh)": round(energy_wh * 0.20, 5), "CO2eq (g)": round(emissions_g * 0.20, 5), "Carga (%)": max(15.0, round(cpu_pct * 0.5, 1))},
+            {"Etapa": "3. Audio (inaSpeechSegmenter)", "Hardware": "GPU / CPU", "Energía (Wh)": round(energy_wh * 0.28, 5), "CO2eq (g)": round(emissions_g * 0.28, 5), "Carga (%)": max(20.0, round(cpu_pct * 0.7, 1))},
+            {"Etapa": "4. Visión (YuNet + OpenCLIP)", "Hardware": "GPU / CPU", "Energía (Wh)": round(energy_wh * 0.30, 5), "CO2eq (g)": round(emissions_g * 0.30, 5), "Carga (%)": max(25.0, round(cpu_pct * 0.8, 1))},
+            {"Etapa": "5. XAI (SHAP Analítico + LIME)", "Hardware": "CPU Ligera", "Energía (Wh)": round(energy_wh * 0.07, 5), "CO2eq (g)": round(emissions_g * 0.07, 5), "Carga (%)": max(8.0, cpu_pct)},
         ]
 
         return {

@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from pathlib import Path
 from src.api.main_controller import fetch_analyzed_documents, get_lexical_profile
 from src.explainability.scoring_model import CorporateGenderScorer
 from frontend.components.search_sidebar import render_sidebar
@@ -317,6 +318,21 @@ def compute_cached_scores(_scorer, docs_payload):
 # 3. Disparo exclusivo tras pulsar el botón
 if run_btn:
     with st.spinner("Ejecutando pipeline y calculando puntuaciones multimodales..."):
+        # Limpiar referencias previas para no mezclar ejecuciones
+        st.session_state.docs = None
+        st.session_state.score_data = None
+        st.session_state.perfil_lexico = None
+
+        media_dir = Path(os.getenv("MEDIA_DIR", "/tmp/ramdisk"))
+        if media_dir.exists():
+            for sub in media_dir.iterdir():
+                if sub.is_dir() and sub.name.startswith("doc_"):
+                    import shutil
+                    shutil.rmtree(sub, ignore_errors=True)
+        if not test_ui:
+            get_cached_documents.clear()
+            compute_cached_scores.clear()
+            
         docs_computed = get_cached_documents(test_ui, company, top_n, tuple(selected_sources))
         score_data_computed = compute_cached_scores(scorer, docs_computed)
 
@@ -354,4 +370,4 @@ else:
         </div>
         """,
         unsafe_allow_html=True
-    )
+    )

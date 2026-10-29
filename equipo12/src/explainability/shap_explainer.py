@@ -71,7 +71,7 @@ def _traducir_textos_shap(fig):
         txt.set_text(f"Score asignado: {val}")
       elif "E[f(x)]" in t:
         val = t.replace("E[f(x)]", "").strip(" =:")
-        txt.set_text(f"Base media sector: {val}")
+        txt.set_text(f"Punto neutro paridad: {val}")
 
     if ax.get_xlabel() == "mean(|SHAP value|)":
       ax.set_xlabel("Impacto medio (|valor SHAP|)")

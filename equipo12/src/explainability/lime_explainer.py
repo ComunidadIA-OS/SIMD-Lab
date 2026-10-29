@@ -195,44 +195,32 @@ class LimeMultimodalEngine:
     return np.array(pil_resized)
 
   def explain_image_instance(
-      self,
-      image_input: Union[str, Path, Image.Image, np.ndarray],
-      num_features: int = 4,
-      num_samples: int = 80,
-  ) -> np.ndarray:
-    """Ejecuta LIME sobre una imagen real destacando las regiones anatómicas o espaciales decisivas."""
-    img_rgb = self._load_image_rgb(image_input)
+        self,
+        image_input: Union[str, Path, Image.Image, np.ndarray],
+        num_features: int = 4,
+        num_samples: int = 80,
+    ) -> np.ndarray:
+        """Ejecuta LIME sobre una imagen real explicando la densidad de rasgos en el encuadre."""
+        img_rgb = self._load_image_rgb(image_input)
 
-    def _vision_predict(images):
-      preds = []
-      h, w = images[0].shape[:2]
-      y1, y2 = int(h * 0.15), int(h * 0.85)
-      x1, x2 = int(w * 0.15), int(w * 0.85)
+        def _vision_predict(images):
+            preds = []
+            h, w = images[0].shape[:2]
+            y1, y2 = int(h * 0.2), int(h * 0.8)
+            x1, x2 = int(w * 0.2), int(w * 0.8)
 
-      for im in images:
-        center_crop = im[y1:y2, x1:x2]
-        std_contrast = np.std(center_crop) / 128.0
-        mean_lum = np.mean(center_crop) / 255.0
-        score = np.clip(0.6 * std_contrast + 0.4 * mean_lum, 0.05, 0.95)
-        preds.append([1.0 - score, score])
-      return np.array(preds)
+            for im in images:
+                foco = im[y1:y2, x1:x2]
+                # Densidad de rasgos activos en el encuadre principal
+                actividad = float(np.mean(foco > 30))
+                score = np.clip(actividad, 0.05, 0.95)
+                preds.append([1.0 - score, score])
+            return np.array(preds)
 
-    explanation = self.image_explainer.explain_instance(
-        img_rgb,
-        _vision_predict,
-        top_labels=1,
-        hide_color=0,
-        num_samples=num_samples,
-    )
-
-    temp, mask = explanation.get_image_and_mask(
-        label=explanation.top_labels[0],
-        positive_only=True,
-        num_features=num_features,
-        hide_rest=False,  # Mantiene la foto real de fondo para contextualizar la decisión
-    )
-
-    overlay = mark_boundaries(
-        temp / 255.0, mask, color=(0.95, 0.8, 0.1), mode="thick"
-    )
-    return (overlay * 255).astype(np.uint8)
+        explanation = self.image_explainer.explain_instance(
+            img_rgb,
+            _vision_predict,
+            top_labels=1,
+            hide_color=0,
+            num_samples=num_samples,
+        )

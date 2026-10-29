@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class MultimodalAnalyzerPipeline:
     """Junta los tres analizadores (texto, audio, imagen/vídeo) y el borrado de la multimedia."""
 
-    def __init__(self, purge: bool = True):
+    def __init__(self, purge: bool = False):
         self.purge = purge
         self.scrubber = EphemeralPrivacyScrubber()
         self.purge_receipts: List[dict] = [] 
@@ -83,8 +83,10 @@ class MultimodalAnalyzerPipeline:
             image_metrics, image_samples, caras_fotos = self._analizar_imagenes(doc)
 
             urls_audio = doc.video_urls or doc.audio_urls             # el audio sale del vídeo si lo hay
-            audio_samples = [AudioSample(audio_path=self._url_publica(i, urls_audio), metrics=a.metrics)
-                             for i, a in audios.items()]
+            audio_samples = [
+                AudioSample(audio_path=str(ruta), metrics=audios[self._indice(ruta)].metrics)
+                for ruta in doc.audio_paths if self._indice(ruta) in audios
+            ]
             audio_metrics = next((a.metrics for a in audios.values() if a.metrics), None)
             subgrupo = self._subgrupo(doc, list(audios.values()), caras_video + caras_fotos)
 
@@ -95,6 +97,7 @@ class MultimodalAnalyzerPipeline:
                 source=doc.source,
                 company_query=doc.company_query,
                 raw_text_snippet=(doc.raw_text or doc.title or "")[:500],   
+                full_raw_text=doc.raw_text or doc.title or "",
                 text_samples=text_samples,
                 media_image_samples=image_samples,
                 media_audio_samples=audio_samples,
@@ -159,7 +162,7 @@ class MultimodalAnalyzerPipeline:
             caras += r.frames.faces
             if r.metrics:
                 metrics = metrics or r.metrics   
-                samples.append(VideoSample(video_path=self._url_publica(i, doc.video_urls), metrics=r.metrics))
+                samples.append(VideoSample(video_path=str(ruta), metrics=r.metrics))
         return metrics, samples, caras
 
     def _analizar_imagenes(self, doc):
@@ -171,7 +174,7 @@ class MultimodalAnalyzerPipeline:
         except Exception as exc:  
             logger.warning("%s: fallo en las imágenes: %s", doc.doc_id, exc)
             return None, [], []
-        samples = [ImageSample(image_path=self._url_publica(self._indice(ruta), doc.image_urls),
+        samples = [ImageSample(image_path=str(ruta),
                                metrics=compute_image_metrics([f for f in r.faces if f.image == n]))
                    for n, ruta in enumerate(doc.image_paths)]
         return r.metrics, samples, r.faces
