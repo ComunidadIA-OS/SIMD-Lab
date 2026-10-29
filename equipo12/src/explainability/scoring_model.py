@@ -339,9 +339,25 @@ class CorporateGenderScorer:
             ),
         }
 
+        # 1. Ponderación por presencia efectiva de cada modalidad
+        modalidades_valores = [
+            ("Texto", by_modality.get("Texto"), sum(1 for s in scores_texto if not np.isnan(s))),
+            ("Audio", by_modality.get("Audio"), sum(1 for s in scores_audio if not np.isnan(s))),
+            ("Imagen", by_modality.get("Imagen"), sum(1 for s in scores_imagen if not np.isnan(s))),
+            ("Vídeo", by_modality.get("Vídeo"), sum(1 for s in scores_video if not np.isnan(s))),
+        ]
+
+        valid_mods = [(peso, val) for _, val, peso in modalidades_valores if val is not None and peso > 0]
+        
+        if valid_mods:
+            peso_total = sum(p for p, _ in valid_mods)
+            global_ponderado = round(sum(p * v for p, v in valid_mods) / peso_total, 1)
+        else:
+            global_ponderado = round(float(np.mean(doc_final_scores)), 1) if doc_final_scores else 50.0
+
         return {
-            "global_score": round(float(np.mean(doc_final_scores)), 1),
+            "global_score": global_ponderado,
             "by_modality": by_modality,
             "dataframe": df_results,
             "features_only": features_for_model,
-        }
+        }
